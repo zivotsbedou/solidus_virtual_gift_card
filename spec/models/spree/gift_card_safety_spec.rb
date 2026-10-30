@@ -32,4 +32,11 @@ RSpec.describe Spree::PaymentMethod::GiftCard do
     2.times { expect(method.void(response.authorization)).to be_success }
     expect(card.reload.amount_authorized).to eq(0)
   end
+  it 'also caps refunds when configured to issue a replacement card' do
+    allow(SolidusVirtualGiftCard::Config).to receive(:credit_to_new_gift_card).and_return(true)
+    response = method.purchase(20000, card, currency: card.currency)
+    expect(method.credit(20000, response.authorization, currency: card.currency)).to be_success
+    expect(method.credit(20000, response.authorization, currency: card.currency)).not_to be_success
+  end
+
 end

@@ -268,7 +268,7 @@ class Spree::VirtualGiftCard < Spree::Base
     if currency != order_currency # sanity check to make sure the order currency hasn't changed since the auth
       errors.add(:base, I18n.t('spree.virtual_gift_card.currency_mismatch'))
       false
-    elsif capture_event && amount.positive? && amount <= capture_event.amount - events.where(action: CREDIT_ACTION, authorization_code: authorization_code).sum(:amount)
+    elsif capture_event && amount.positive? && amount <= capture_event.amount - Spree::VirtualGiftCardEvent.where(action: CREDIT_ACTION, authorization_code: authorization_code).sum(:amount)
       action_attributes = {
         action: CREDIT_ACTION,
         action_amount: amount,
