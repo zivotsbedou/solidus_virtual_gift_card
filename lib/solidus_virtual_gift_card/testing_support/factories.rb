@@ -13,6 +13,7 @@ FactoryBot.define do
     recipient_email { 'me@lordvoldemort.com' }
 
     factory :redeemable_virtual_gift_card do
+      line_item { create(:line_item).tap { |item| item.order.update!(state: 'complete', completed_at: Time.current, payment_state: 'paid') } }
       association :purchaser, factory: :user
       inventory_unit do |gift_card|
         gift_card.line_item.inventory_units.find{ |iu| iu.gift_card.nil? } ||

@@ -198,7 +198,7 @@ describe Spree::VirtualGiftCard do
     let(:redeemer) { create(:user) }
 
     context 'it is not redeemable' do
-      before { gift_card.redeemable = false }
+      before { gift_card.update!(redeemable: false) }
 
       it 'returns false' do
         expect(subject).to be false
@@ -237,7 +237,7 @@ describe Spree::VirtualGiftCard do
     end
 
     context 'it has already been redeemed' do
-      before { gift_card.redeemed_at = Date.yesterday }
+      before { gift_card.update!(redeemed_at: Date.yesterday) }
 
       it 'returns false' do
         expect(subject).to be false
@@ -353,10 +353,10 @@ describe Spree::VirtualGiftCard do
   end
 
   describe "#authorize" do
-    let(:virtual_gift_card) { create(:virtual_gift_card, amount: 4) }
+    let(:virtual_gift_card) { create(:redeemable_virtual_gift_card, amount: 4) }
 
     context "amount is valid" do
-      let(:virtual_gift_card) { create(:virtual_gift_card, amount: authorization_amount + added_authorization_amount, amount_authorized: authorization_amount) }
+      let(:virtual_gift_card) { create(:redeemable_virtual_gift_card, amount: authorization_amount + added_authorization_amount, amount_authorized: authorization_amount) }
 
       let(:authorization_amount)       { 1.0 }
       let(:added_authorization_amount) { 3.0 }
@@ -404,7 +404,7 @@ describe Spree::VirtualGiftCard do
   end
 
   describe "#validate_authorization" do
-    let(:virtual_gift_card) { create(:virtual_gift_card) }
+    let(:virtual_gift_card) { create(:redeemable_virtual_gift_card) }
 
     context "insufficient funds" do
       subject { virtual_gift_card.validate_authorization(virtual_gift_card.amount * 2, virtual_gift_card.currency) }
@@ -513,7 +513,7 @@ describe Spree::VirtualGiftCard do
   end
 
   describe "#capture" do
-    let(:virtual_gift_card) { create(:virtual_gift_card, amount: authorized_amount * 2, amount_authorized: authorized_amount) }
+    let(:virtual_gift_card) { create(:redeemable_virtual_gift_card, amount: authorized_amount * 2, amount_authorized: authorized_amount) }
     let(:authorized_amount) { 10.00 }
     let(:auth_code) { "23-GC-20140602164814476128" }
     let(:authorized_code) { virtual_gift_card.authorize(authorized_amount, virtual_gift_card.currency) }
@@ -642,7 +642,7 @@ describe Spree::VirtualGiftCard do
     end
 
     let(:auth_code) { "1-SC-20141111111111" }
-    let(:virtual_gift_card) { create(:virtual_gift_card, amount: 150) }
+    let(:virtual_gift_card) { create(:redeemable_virtual_gift_card, amount: 150) }
     let(:originator) { nil }
 
     context "without event for auth_code" do
@@ -711,7 +711,7 @@ describe Spree::VirtualGiftCard do
     context "when create" do
       context "when gift card has an amount" do
         let(:gift_card_amount) { 100.0 }
-        let(:gift_card) { create(:virtual_gift_card, amount: gift_card_amount) }
+        let(:gift_card) { create(:redeemable_virtual_gift_card, amount: gift_card_amount) }
 
         it "creates a virtual gift card event" do
           expect { gift_card }.to change(Spree::VirtualGiftCardEvent, :count).by(1)
@@ -780,7 +780,7 @@ describe Spree::VirtualGiftCard do
 
     let(:event_auth_code) { "1-GC-20141111111111" }
     let(:amount_used) { 10.0 }
-    let(:virtual_gift_card) { create(:virtual_gift_card, amount_used:) }
+    let(:virtual_gift_card) { create(:redeemable_virtual_gift_card, amount_used:) }
     let!(:capture_event) {
       create(:virtual_gift_card_auth_event,
         action: Spree::VirtualGiftCard::CAPTURE_ACTION,

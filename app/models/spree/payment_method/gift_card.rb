@@ -22,17 +22,13 @@ module Spree
     end
 
     def purchase(amount_in_cents, virtual_gift_card, gateway_options = {})
-      eligible_events = virtual_gift_card.events.where(amount: amount_in_cents / BigDecimal('100.0'), action: Spree::VirtualGiftCard::ELIGIBLE_ACTION)
-      event = eligible_events.find do |eligible_event|
-        virtual_gift_card.events.where(authorization_code: eligible_event.authorization_code)
-                         .where.not(action: Spree::StoreCredit::ELIGIBLE_ACTION).empty?
+      action = lambda do |card|
+        code = card.authorize(amount_in_cents / BigDecimal('100.0'), gateway_options[:currency],
+          action_originator: gateway_options[:originator])
+        code && card.capture(amount_in_cents / BigDecimal('100.0'), code, gateway_options[:currency],
+          action_originator: gateway_options[:originator])
       end
-
-      if event.blank?
-        ActiveMerchant::Billing::Response.new(false, I18n.t('spree.virtual_gift_card.unable_to_find'), {}, {})
-      else
-        capture(amount_in_cents, event.authorization_code, gateway_options)
-      end
+      handle_action_call(virtual_gift_card, action, :purchase)
     end
 
     def capture(amount_in_cents, auth_code, gateway_options = {})

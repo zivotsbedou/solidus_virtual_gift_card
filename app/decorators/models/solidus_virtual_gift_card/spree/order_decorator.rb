@@ -5,7 +5,6 @@ module SolidusVirtualGiftCard
     module OrderDecorator
       def self.prepended(base)
         base.class_eval do
-          state_machine.after_transition to: :complete, do: :send_gift_card_emails
           state_machine.before_transition to: :confirm, do: :add_gift_card_payments
 
           has_many :gift_cards, through: :line_items
@@ -13,6 +12,19 @@ module SolidusVirtualGiftCard
 
           serialize :gift_card_codes, type: Array, coder: YAML
         end
+      end
+
+      def apply_gift_card_code(code)
+        return false if completed?
+
+        normalized = ::Spree::RedemptionCodeGenerator.format_redemption_code_for_lookup(code.to_s)
+        card = ::Spree::VirtualGiftCard.find_by(redemption_code: normalized, currency: currency,
+          redeemable: true, redeemed_at: nil, deactivated_at: nil)
+        unless card && card.amount_remaining.positive?
+          errors.add(:base, I18n.t('spree.virtual_gift_card.unable_to_find'))
+          return false
+        end
+        update(gift_card_codes: (format_redemption_codes_for_lookup + [normalized]).uniq)
       end
 
       def gift_card_codes
@@ -30,21 +42,18 @@ module SolidusVirtualGiftCard
         end
       end
 
-      def finalize
-        super
-        inventory_units = self.inventory_units
-        gift_cards.each_with_index do |gift_card, index|
-          gift_card.make_redeemable!(purchaser: user, inventory_unit: inventory_units[index])
-        end
-      end
-
       def send_gift_card_emails
-        return unless SolidusVirtualGiftCard::Config.send_gift_card_emails
+        return unless completed? && paid? && !canceled?
 
         gift_cards.each do |gift_card|
-          if gift_card.send_email_at.nil? || gift_card.send_email_at <= DateTime.now
-            gift_card.send_email
+          gift_card.with_lock do
+            next if gift_card.deactivated? || gift_card.redeemed?
+            unless gift_card.redeemable?
+              unit = gift_card.line_item.inventory_units.detect { |item| item.gift_card.nil? }
+              gift_card.make_redeemable!(purchaser: user, inventory_unit: unit)
+            end
           end
+          gift_card.send_email if SolidusVirtualGiftCard::Config.send_gift_card_emails
         end
       end
 
@@ -93,9 +102,9 @@ module SolidusVirtualGiftCard
 
       def matching_gift_cards
         @matching_gift_cards = ::Spree::VirtualGiftCard
-                               .where(currency:, redemption_code: format_redemption_codes_for_lookup)
+                               .where(currency:, redemption_code: format_redemption_codes_for_lookup, redeemable: true, redeemed_at: nil, deactivated_at: nil)
                                .sort_by do |virtual_gift_card|
-                                 gift_card_codes.index(virtual_gift_card.redemption_code)
+                                 format_redemption_codes_for_lookup.index(virtual_gift_card.redemption_code)
                                end
       end
 

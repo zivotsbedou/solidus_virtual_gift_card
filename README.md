@@ -1,74 +1,68 @@
-Solidus - Virtual Gift Card
-===========================
+# Solidus Virtual Gift Card
 
-[![CircleCI](https://circleci.com/gh/solidusio-contrib/solidus_virtual_gift_card.svg?style=svg)](https://circleci.com/gh/solidusio-contrib/solidus_virtual_gift_card)
+Maintained fork of `solidusio-contrib/solidus_virtual_gift_card` for Solidus 4.8,
+Rails 8.1, Ruby 3.2–4.x and SQLite. The extension keeps its existing models,
+payment method, legacy backend and migration history.
 
-A virtual gift card implementation for Solidus.
+## Install
 
-* Allows setup of virtual gift card products that get unique codes upon
-  purchase.
-* The virtual gift card codes can be used to add store credit to a user's
-  account.
+Add the gem from this repository, bundle, then run:
 
-Installation
-------------
-
-In your Gemfile:
-
-```ruby
-gem "solidus_virtual_gift_card"
-```
-
-Bundle your dependencies and run the installation generator:
-
-```shell
-bundle install
+```sh
 bundle exec rails g solidus_virtual_gift_card:install
 ```
 
-Use Gift Card during Checkout
------------------------------
+Back up persistent data and rehearse migrations on a disposable copy first.
+Create a Gift Card payment method, with customer/admin availability disabled and
+auto-capture enabled. Mark a product as Gift Card in the legacy product editor.
+Use variants for fixed denominations, disable inventory tracking, and configure
+free shipping in a dedicated virtual-gift-card shipping category.
 
-1) Visit /admin/payment_methods and add the Gift Card payment method. It should not be available to Users or Admins.
-2) During checkout, you can call the API POST /api/orders/:order_id/gift_card_codes(.:format) to add gift card codes to the order.
-3) At the finalization step, the gift cards listed on the order will be used as payment.
+The application owns storefront forms. Pass recipient_name, recipient_email,
+purchaser_name and gift_message under `gift_card_details` in the options hash to
+`order.contents.add`. Apply codes through `order.apply_gift_card_code(code)`.
+Authorize access to the current order before accepting any code. The extension
+allocates gift payments on the transition to confirmation; Solidus processes them
+at checkout. Bank/payment integrations must charge only their payment amount,
+not the original order total.
 
-Add expire job
---------------
+## Behavior
 
-If you want to change the configuration, you can add the following to an initializer:
+- Each purchased unit creates one inactive card at the variant price.
+- Solidus order-finalized/recalculated events enqueue activation only for paid,
+  completed orders. Guest purchases work without an account.
+- The recipient email defaults to the buyer. Messages and recipient names are
+  available to mail views. Jobs check payment status again before activation.
+- Delivery is enqueued once per card; staff can explicitly resend. `sent_at`
+  records enqueueing, not confirmed receipt. Configure an Active Job backend.
+- Gift-only shipments are shipped automatically after payment without a separate
+  shipment email. Mixed shipments remain under normal fulfillment.
+- Redemption supports a remaining balance, multiple cards and a second payment
+  for the remainder. Currency and card status are checked at payment time.
+- Gateway mutations lock the card. Captures and voids are idempotent; cumulative
+  refunds cannot exceed a capture. Refunds restore the existing card by default.
+- An original purchase that becomes unpaid or canceled cannot fund new payments.
+  Review refunds of already-spent gift-card purchases manually.
 
-SolidusVirtualGiftCard::Config.tap do |config|
-  # Amount of time after which the authorized transaction should be voided
-  config.authorize_timeout = 1.month
+If scheduled delivery is configured in the admin, run
+`solidus_virtual_gift_card:send_current_emails` daily; it catches overdue unsent
+cards too. If using authorization instead of immediate capture, schedule
+`SolidusVirtualGiftCard::VoidExpiredAuthorizedEventsJob` to release expired
+reservations through their matching Solidus payment.
 
-  config.schedule_job_class = 'SolidusVirtualGiftCard::VoidExpiredAuthorizedEventsJob'
-end
+Account store-credit redemption remains available. It locks the card and refuses
+conversion while payment reservations are outstanding.
 
-The last step in the installation process is to configure the SolidusVirtualGiftCard::VoidExpiredAuthorizedEventsJob background job to run regularly. There are different ways to do this depending on the environment your application is running in: Heroku Scheduler, cron etc.
+## Development
 
-Authorization
--------------
-
-For discrete authorization, two permission sets have been added to allow for granular display in the admin.
-
-`Spree::PermissionSets::VirtualGiftCardDisplay` and `Spree::PermissionSets::VirtualGiftCardManagement` have been added and can be registered via [RoleConfiguration](http://docs.solidus.io/Spree/RoleConfiguration.html)
-
-Testing
--------
-
-First bundle your dependencies, then run `rake`. `rake` will default to
-building the dummy app if it does not exist, then it will run specs. The dummy
-app can be regenerated by using `rake test_app`.
-
-```shell
-bundle
-bundle exec rake
+```sh
+mise trust
+mise exec -- bundle install
+mise exec -- bundle exec rake extension:test_app
+mise run test
 ```
 
-When testing your application's integration with this extension you may use its
-factories. Simply add this require statement to your spec_helper:
-
-```ruby
-require "solidus_virtual_gift_card/factories"
-```
+The test app uses Solidus 4.8, Rails 8.1 and SQLite. Admin browser tests require
+Chrome. The legacy backend uses Deface; no CoffeeScript dependency is required.
+The generated Solidus storefront and new SolidusAdmin require application-owned
+integration; this gem does not install a second frontend.

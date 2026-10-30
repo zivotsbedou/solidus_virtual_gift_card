@@ -8,12 +8,10 @@ module Spree
       def create
         authorize! :update, @order, order_token
 
-        @order.gift_card_codes << params[:gift_card_code].strip
-
-        if @order.save
+        if @order.apply_gift_card_code(params[:gift_card_code])
           respond_with(@order, default_template: 'spree/api/orders/show', status: 201)
         else
-          logger.error("apply_gift_card_code_error=#{@order.error.inspect}")
+          logger.error("apply_gift_card_code_error=#{@order.errors.inspect}")
           invalid_resource!(@order)
         end
       end
@@ -21,12 +19,14 @@ module Spree
       def destroy
         authorize! :update, @order, order_token
 
+        return render(status: :unprocessable_entity, json: {}) if @order.completed?
+
         @order.gift_card_codes = @order.gift_card_codes - [params[:id]]
 
         if @order.save
           respond_with(@order, default_template: 'spree/api/orders/show', status: 204)
         else
-          logger.error("remove_gift_card_code_error=#{@order.error.inspect}")
+          logger.error("remove_gift_card_code_error=#{@order.errors.inspect}")
           invalid_resource!(@order)
         end
       end

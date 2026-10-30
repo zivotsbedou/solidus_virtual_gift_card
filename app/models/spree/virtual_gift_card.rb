@@ -25,7 +25,7 @@ class Spree::VirtualGiftCard < Spree::Base
 
   validates :amount, numericality: { greater_than: 0 }
   validates :redemption_code, uniqueness: { conditions: -> { where(redeemed_at: nil, redeemable: true) } }
-  validates :purchaser_id, presence: { if: proc { |gc| gc.redeemable? } }
+  validates :recipient_email, format: { with: URI::MailTo::EMAIL_REGEXP }, allow_blank: true
 
   scope :unredeemed, -> { where(redeemed_at: nil) }
   scope :by_redemption_code, ->(redemption_code) { where(redemption_code: redemption_code) }
@@ -54,19 +54,15 @@ class Spree::VirtualGiftCard < Spree::Base
   end
 
   def redeem(redeemer)
-    return false if redeemed? || !redeemable?
-    return false if amount_remaining <= 0
+    with_lock do
+      return false unless redeemer && redeemable? && !redeemed? && !deactivated?
+      return false if amount_remaining <= 0 || amount_authorized.positive?
+      return false if order && (!order.paid? || order.canceled?)
 
-    create_store_credit!(
-      amount: amount_remaining,
-      currency: currency,
-      memo: memo,
-      user: redeemer,
-      created_by: redeemer,
-      action_originator: self,
-      category: store_credit_category,
-    )
-    update( redeemed_at: Time.zone.now, redeemer: redeemer )
+      create_store_credit!(amount: amount_remaining, currency: currency, memo: memo,
+        user: redeemer, created_by: redeemer, action_originator: self, category: store_credit_category)
+      update!(redeemed_at: Time.current, redeemer: redeemer)
+    end
   end
 
   def make_redeemable!(purchaser:, inventory_unit: nil)
@@ -104,7 +100,7 @@ class Spree::VirtualGiftCard < Spree::Base
   end
 
   def formatted_amount
-    number_to_currency(amount, precision: 0)
+    Spree::Money.new(amount, currency: currency).to_s
   end
 
   def formatted_send_email_at
@@ -135,9 +131,15 @@ class Spree::VirtualGiftCard < Spree::Base
     Spree::VirtualGiftCard.unredeemed.by_redemption_code(redemption_code).first
   end
 
-  def send_email
-    Spree::GiftCardMailer.gift_card_email(self).deliver_later
-    update!(sent_at: DateTime.now)
+  def send_email(force: false)
+    with_lock do
+      return unless redeemable? && !deactivated? && !redeemed? && (force || sent_at.nil?)
+      return if order && (!order.paid? || order.canceled?)
+      return if !force && send_email_at && send_email_at > Date.current
+
+      Spree::GiftCardMailer.gift_card_email(self).deliver_later
+      update!(sent_at: Time.current)
+    end
   end
 
   def generate_authorization_code
@@ -159,7 +161,7 @@ class Spree::VirtualGiftCard < Spree::Base
     authorization_code = options[:action_authorization_code]
     if authorization_code
       if events.find_by(action: AUTHORIZE_ACTION, authorization_code:)
-        # Don't authorize again on capture
+        return false if events.exists?(action: VOID_ACTION, authorization_code: authorization_code)
         return true
       end
     else
@@ -182,7 +184,9 @@ class Spree::VirtualGiftCard < Spree::Base
   end
 
   def validate_authorization(amount, order_currency)
-    if amount_remaining.to_d < amount.to_d
+    if !redeemable? || redeemed? || deactivated? || amount.to_d <= 0 || (order && (!order.paid? || order.canceled?))
+      errors.add(:base, I18n.t('spree.virtual_gift_card.unable_to_find'))
+    elsif amount_remaining.to_d < amount.to_d
       errors.add(:base, I18n.t('spree.virtual_gift_card.insufficient_funds'))
     elsif currency != order_currency
       errors.add(:base, I18n.t('spree.virtual_gift_card.currency_mismatch'))
@@ -201,6 +205,9 @@ class Spree::VirtualGiftCard < Spree::Base
   end
 
   def capture(amount, authorization_code, order_currency, options = {})
+    if (captured = events.find_by(action: CAPTURE_ACTION, authorization_code: authorization_code))
+      return captured.amount == amount && currency == order_currency ? authorization_code : false
+    end
     return false unless authorize(amount, order_currency, action_authorization_code: authorization_code)
 
     auth_event = events.find_by!(action: AUTHORIZE_ACTION, authorization_code:)
@@ -232,6 +239,8 @@ class Spree::VirtualGiftCard < Spree::Base
   end
 
   def void(authorization_code, options = {})
+    return true if events.exists?(action: VOID_ACTION, authorization_code: authorization_code)
+    return false if events.exists?(action: CAPTURE_ACTION, authorization_code: authorization_code)
     if auth_event = events.find_by(action: AUTHORIZE_ACTION, authorization_code:)
       update!({
         action: VOID_ACTION,
@@ -259,7 +268,7 @@ class Spree::VirtualGiftCard < Spree::Base
     if currency != order_currency # sanity check to make sure the order currency hasn't changed since the auth
       errors.add(:base, I18n.t('spree.virtual_gift_card.currency_mismatch'))
       false
-    elsif capture_event && amount <= capture_event.amount
+    elsif capture_event && amount.positive? && amount <= capture_event.amount - events.where(action: CREDIT_ACTION, authorization_code: authorization_code).sum(:amount)
       action_attributes = {
         action: CREDIT_ACTION,
         action_amount: amount,

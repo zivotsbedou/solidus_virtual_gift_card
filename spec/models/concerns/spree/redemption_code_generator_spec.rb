@@ -6,9 +6,9 @@ describe Spree::RedemptionCodeGenerator do
   describe '#generate_redemption_code' do
     subject { described_class.generate_redemption_code }
 
-    it 'generates a 16 character alpha-numeric code' do
+    it 'generates a 24 character alpha-numeric code' do
       code = subject
-      expect(code.match('^[a-zA-Z0-9]{16}')[0]).to eq code
+      expect(code.match('^[a-zA-Z0-9]{24}')[0]).to eq code
     end
   end
 

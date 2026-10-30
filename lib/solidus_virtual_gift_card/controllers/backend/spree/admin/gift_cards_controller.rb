@@ -24,7 +24,7 @@ class Spree::Admin::GiftCardsController < Spree::Admin::BaseController # rubocop
       redirect_to redirect_path
     else
       flash[:error] = @gift_card.errors.full_messages.join(', ')
-      redirect_to :back
+      redirect_back(fallback_location: admin_gift_cards_path)
     end
   end
 
@@ -52,7 +52,7 @@ class Spree::Admin::GiftCardsController < Spree::Admin::BaseController # rubocop
   end
 
   def send_email
-    @gift_card.send_email
+    @gift_card.send_email(force: true)
     redirect_back(fallback_location: admin_orders_path)
   end
 

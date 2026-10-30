@@ -5,8 +5,8 @@ require 'active_support/all'
 
 module SolidusVirtualGiftCard
   class Configuration < Spree::Preferences::Configuration
-    preference :send_gift_card_emails, :string, default: ''
-    preference :credit_to_new_gift_card, :boolean, default: true
+    preference :send_gift_card_emails, :boolean, default: true
+    preference :credit_to_new_gift_card, :boolean, default: false
 
     preference :authorize_timeout, :time, default: 1.month
     class_name_attribute :schedule_job_class, default: 'SolidusVirtualGiftCard::VoidExpiredAuthorizedEventsJob'

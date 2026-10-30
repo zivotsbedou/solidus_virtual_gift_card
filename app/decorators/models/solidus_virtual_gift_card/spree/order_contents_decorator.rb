@@ -2,29 +2,31 @@
 
 module SolidusVirtualGiftCard
   module Spree
+    module GiftCardCartUpdate
+      def update_cart(params)
+        result = super
+        if result
+          order.line_items.select(&:gift_card?).each { |item| update_gift_cards(item, item.quantity) }
+        end
+        result
+      end
+
+    end
+
     module OrderContentsDecorator
+      include GiftCardCartUpdate
       def add(variant, quantity = 1, options = {})
-        line_item = super
-        create_gift_cards(line_item, quantity, options['gift_card_details'] || {})
-        line_item
+        ::Spree::LineItem.transaction do
+          line_item = super
+          create_gift_cards(line_item, quantity, options['gift_card_details'] || {})
+          line_item
+        end
       end
 
       def remove(variant, quantity = 1, options = {})
         line_item = super
         remove_gift_cards(line_item, quantity)
         line_item
-      end
-
-      def update_cart(params)
-        update_success = super(params)
-
-        if update_success && params[:line_items_attributes]
-          line_item = ::Spree::LineItem.find_by(id: params[:line_items_attributes][:id])
-          new_quantity = params[:line_items_attributes][:quantity].to_i
-          update_gift_cards(line_item, new_quantity)
-        end
-
-        update_success
       end
 
       private
@@ -56,7 +58,7 @@ module SolidusVirtualGiftCard
         if line_item&.gift_card?
           gift_card_count = line_item.gift_cards.count
           if new_quantity > gift_card_count
-            create_gift_cards(line_item, new_quantity - gift_card_count)
+            create_gift_cards(line_item, new_quantity - gift_card_count, line_item.gift_cards.first&.details&.stringify_keys || {})
           elsif new_quantity < line_item.gift_cards.count
             remove_gift_cards(line_item, gift_card_count - new_quantity)
           end
@@ -74,8 +76,8 @@ module SolidusVirtualGiftCard
         end
       end
 
-      ::Spree::SimpleOrderContents.prepend self if Object.const_defined?('::Spree::SimpleOrderContents')
-      ::Spree::OrderContents.prepend self if Object.const_defined?('::Spree::OrderContents')
+      ::Spree::SimpleOrderContents.prepend self
+      ::Spree::OrderContents.prepend GiftCardCartUpdate if Object.const_defined?('::Spree::OrderContents')
     end
   end
 end
