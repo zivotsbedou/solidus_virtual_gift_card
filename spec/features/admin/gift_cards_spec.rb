@@ -20,6 +20,14 @@ describe "Gift Cards", type: :feature do
     product.update_attribute(:gift_card, true)
   end
 
+  it "lists cards purchased by guests" do
+    gift_card.update!(purchaser: nil)
+    order.update!(email: "guest@example.com")
+    visit spree.admin_gift_cards_path
+    expect(page).to have_content("guest@example.com")
+    expect(page).to have_content(gift_card.formatted_redemption_code)
+  end
+
   describe "edit gift card" do
     let(:new_recipient_name) { "Heidi" }
     let(:new_recipient_email) { "heidi@gmail.com" }
