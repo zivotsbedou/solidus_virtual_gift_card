@@ -3,6 +3,15 @@
 require 'spec_helper'
 
 describe Spree::Order do
+  it 'allocates gift payments after the checkout flow is rebuilt' do
+    Spree::Order.checkout_flow(&Spree::Order.checkout_flow)
+    create(:gift_card_payment_method)
+    card = create(:redeemable_virtual_gift_card, amount: 1000)
+    order = create(:order_with_totals, state: 'payment', gift_card_codes: [card.redemption_code])
+    expect(order.next).to be_truthy
+    expect(order.payments.gift_cards.sum(:amount)).to eq(order.total)
+  end
+
   describe '#send_gift_card_emails payment gate' do
     let(:order) { create(:completed_order_with_totals, user: nil, email: 'guest@example.com', payment_state: 'paid') }
     let!(:card) { create(:virtual_gift_card, line_item: order.line_items.first) }

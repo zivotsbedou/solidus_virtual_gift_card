@@ -2,8 +2,16 @@
 
 module SolidusVirtualGiftCard
   module Spree
+    module GiftCardCheckoutFlow
+      def define_state_machine!
+        super
+        state_machine.before_transition to: :confirm, do: :add_gift_card_payments
+      end
+    end
+
     module OrderDecorator
       def self.prepended(base)
+        base.singleton_class.prepend GiftCardCheckoutFlow
         base.class_eval do
           state_machine.before_transition to: :confirm, do: :add_gift_card_payments
 
