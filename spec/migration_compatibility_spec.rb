@@ -2,6 +2,18 @@ require 'spec_helper'
 require File.expand_path('../db/migrate/20250520072803_change_amount_to_virtual_gift_card', __dir__)
 
 RSpec.describe ChangeAmountToVirtualGiftCard do
+  ['Mysql2', 'Trilogy'].each do |adapter|
+    it "uses a supported integer cast for #{adapter}" do
+      migration = described_class.new
+      allow(migration).to receive(:connection).and_return(double(adapter_name: adapter))
+      allow(migration).to receive(:add_column)
+      allow(migration).to receive(:remove_column)
+      allow(migration).to receive(:rename_column)
+      expect(migration).to receive(:execute).with('UPDATE spree_virtual_gift_cards SET amount_temp = CAST(amount AS SIGNED)')
+      migration.down
+    end
+  end
+
   it 'rolls down and up on an isolated SQLite database' do
     stub_const('GiftMigrationRecord', Class.new(ActiveRecord::Base))
     GiftMigrationRecord.establish_connection(adapter: 'sqlite3', database: ':memory:')

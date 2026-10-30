@@ -8,7 +8,8 @@ class ChangeAmountToVirtualGiftCard < ActiveRecord::Migration[7.0]
 
   def down
     add_column :spree_virtual_gift_cards, :amount_temp, :integer
-    execute "UPDATE spree_virtual_gift_cards SET amount_temp = CAST(amount AS INTEGER)"
+    integer_type = connection.adapter_name.match?(/mysql|trilogy/i) ? "SIGNED" : "INTEGER"
+    execute "UPDATE spree_virtual_gift_cards SET amount_temp = CAST(amount AS #{integer_type})"
     remove_column :spree_virtual_gift_cards, :amount
     rename_column :spree_virtual_gift_cards, :amount_temp, :amount
   end
