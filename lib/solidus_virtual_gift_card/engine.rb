@@ -11,6 +11,10 @@ module SolidusVirtualGiftCard
 
     engine_name 'solidus_virtual_gift_card'
 
+    initializer "solidus_virtual_gift_card.filter_codes" do |app|
+      app.config.filter_parameters += [:redemption_code, :gift_card_code, :gift_card_codes]
+    end
+
     # use rspec for tests
     config.generators do |g|
       g.test_framework :rspec
