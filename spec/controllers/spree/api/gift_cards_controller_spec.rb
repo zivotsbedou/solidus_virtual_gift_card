@@ -30,8 +30,7 @@ describe Spree::Api::GiftCardsController do
       let(:api_user) { create(:user) }
 
       before do
-        allow(controller).to receive(:load_user)
-        controller.instance_variable_set(:@current_api_user, api_user)
+        allow(controller).to receive(:current_api_user).and_return(api_user)
       end
 
       let(:parsed_response) { HashWithIndifferentAccess.new(JSON.parse(response.body)) }
@@ -79,7 +78,6 @@ describe Spree::Api::GiftCardsController do
         end
 
         it 'returns a 201' do
-          subject
           expect(subject.status).to eq 201
         end
       end

@@ -1,64 +1,26 @@
-# frozen_string_literal: true
+require 'spec_helper'
 
 RSpec.describe SolidusVirtualGiftCard::VoidExpiredAuthorizedEventsJob, type: :job do
-  subject(:call_perform_now) { -> { described_class.perform_now }.call }
-
-  let(:order) { instance_double('Spree::Order', last_for_user?: last_for_user) }
-
-  let(:allocated_gift_card) { create(:redeemable_virtual_gift_card) }
-  let(:authorized_expired_gift_card) { create(:redeemable_virtual_gift_card) }
-  let(:authorized_captured_gift_card) { create(:redeemable_virtual_gift_card) }
-  let(:authorized_gift_card) { create(:redeemable_virtual_gift_card) }
-
-  before do
-    allocated_gift_card
-    allocated_gift_card.events.update_all(created_at: 3.months.ago) # rubocop:disable Rails/SkipsModelValidations
-    create(:gift_card_payment, source: allocated_gift_card)
-
-    authorized_expired_gift_card.events.update_all(created_at: 3.months.ago) # rubocop:disable Rails/SkipsModelValidations
-    create(:virtual_gift_card_auth_event, virtual_gift_card: authorized_expired_gift_card, created_at: 2.months.ago)
-    create(:gift_card_payment, source: authorized_expired_gift_card)
-
-    authorized_captured_gift_card.events.update_all(created_at: 3.months.ago) # rubocop:disable Rails/SkipsModelValidations
-    create(:virtual_gift_card_auth_event, virtual_gift_card: authorized_captured_gift_card, created_at: 2.months.ago)
-    create(:virtual_gift_card_capture_event, virtual_gift_card: authorized_captured_gift_card, created_at: (2.months - 1.week).ago)
-    create(:gift_card_payment, source: authorized_captured_gift_card)
-
-    authorized_gift_card.events.update_all(created_at: 3.months.ago) # rubocop:disable Rails/SkipsModelValidations
-    create(:virtual_gift_card_auth_event, virtual_gift_card: authorized_gift_card, created_at: 25.days.ago)
-    create(:gift_card_payment, source: authorized_gift_card)
+  it 'voids the matching expired reservation once, preserving another payment on the same card' do
+    card = create(:redeemable_virtual_gift_card, amount: 100)
+    expired = create(:gift_card_payment, source: card, amount: 20)
+    current = create(:gift_card_payment, source: card, amount: 30)
+    expired.authorize!
+    current.authorize!
+    card.events.where(authorization_code: expired.response_code).update_all(created_at: 2.months.ago)
+    2.times { described_class.perform_now }
+    expect(expired.reload).to be_void
+    expect(current.reload).to be_pending
+    expect(card.reload.amount_authorized).to eq(30)
   end
 
-  it 'voids the expired transaction' do
-    allow(SolidusVirtualGiftCard::Config).to receive(:authorize_timeout).and_return(1.month)
-
-    expect do
-      call_perform_now
-    end.to change { Spree::VirtualGiftCardEvent.where(action: Spree::VirtualGiftCard::VOID_ACTION).count }.by(1)
-  end
-
-  context 'when payment cannot be found' do
-    it 'voids the expired transactions' do
-      allow(Spree::Payment).to receive(:find_by).and_return(nil)
-      expect(Rails.logger).to(
-        receive(:error)
-        .with("Payment not found for event #{authorized_expired_gift_card.events.last.authorization_code}")
-        .and_call_original
-      )
-
-      expect do
-        call_perform_now
-      end.to change { Spree::VirtualGiftCardEvent.where(action: Spree::VirtualGiftCard::VOID_ACTION).count }.by(0)
-    end
-  end
-
-  context 'when the SolidusVirtualGiftCard::Config.authorize_timeout is set to 20 days' do
-    it 'voids the expired transactions' do
-      allow(SolidusVirtualGiftCard::Config).to receive(:authorize_timeout).and_return(20.days)
-
-      expect do
-        call_perform_now
-      end.to change { Spree::VirtualGiftCardEvent.where(action: Spree::VirtualGiftCard::VOID_ACTION).count }.by(2)
-    end
+  it 'keeps a captured payment captured' do
+    payment = create(:gift_card_payment, amount: 10)
+    payment.authorize!
+    payment.capture!
+    payment.source.events.update_all(created_at: 2.months.ago)
+    described_class.perform_now
+    expect(payment.reload).to be_completed
+    expect(payment.source.reload.amount_used).to eq(10)
   end
 end

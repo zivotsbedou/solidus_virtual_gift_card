@@ -1,0 +1,4 @@
+[tools]
+ruby = "4.0.7"
+[tasks.test]
+run = "bundle exec rspec"

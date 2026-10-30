@@ -11,7 +11,7 @@ RSpec.describe Spree::PaymentMethod::GiftCard do
     end
 
     let(:auth_amount) { virtual_gift_card.amount_remaining * 100 }
-    let(:virtual_gift_card) { create(:virtual_gift_card) }
+    let(:virtual_gift_card) { create(:redeemable_virtual_gift_card) }
     let(:gateway_options) { super().merge(originator:) }
     let(:originator) { nil }
 
@@ -35,7 +35,7 @@ RSpec.describe Spree::PaymentMethod::GiftCard do
     end
 
     context 'when the currency does not match the order currency' do
-      let(:virtual_gift_card) { create(:virtual_gift_card, currency: 'AUD') }
+      let(:virtual_gift_card) { create(:redeemable_virtual_gift_card, currency: 'AUD') }
 
       it "declines the credit" do
         expect(authorize).not_to be_success
@@ -72,7 +72,7 @@ RSpec.describe Spree::PaymentMethod::GiftCard do
 
     let(:authorized_amount) { capture_amount / 100.0 }
     let(:auth_event) { create(:virtual_gift_card_auth_event, virtual_gift_card:, amount: authorized_amount) }
-    let(:virtual_gift_card) { create(:virtual_gift_card, amount_authorized: authorized_amount) }
+    let(:virtual_gift_card) { create(:redeemable_virtual_gift_card, amount_authorized: authorized_amount) }
     let(:originator) { nil }
 
     context 'with an invalid auth code' do
@@ -98,7 +98,7 @@ RSpec.describe Spree::PaymentMethod::GiftCard do
     end
 
     context 'when the currency does not match the order currency' do
-      let(:virtual_gift_card) { create(:virtual_gift_card, currency: 'AUD', amount_authorized: authorized_amount) }
+      let(:virtual_gift_card) { create(:redeemable_virtual_gift_card, currency: 'AUD', amount_authorized: authorized_amount) }
 
       it "declines the credit" do
         expect(capture).not_to be_success
@@ -125,37 +125,18 @@ RSpec.describe Spree::PaymentMethod::GiftCard do
   end
 
   describe "#purchase" do
-    subject(:gift_card_payment_method) do
-      described_class.new
+    it 'rejects a purchase above the remaining balance' do
+      card = create(:redeemable_virtual_gift_card, amount: 25)
+      response = described_class.new.purchase(10000, card, gateway_options)
+      expect(response).not_to be_success
+      expect(card.reload.amount_used).to eq(0)
     end
 
-    it "declines a purchase if it can't find a pending credit for the correct amount" do
-      amount = 100.0
-      virtual_gift_card = create(:virtual_gift_card)
-      auth_code = virtual_gift_card.generate_authorization_code
-      virtual_gift_card.events.create!(action: Spree::VirtualGiftCard::ELIGIBLE_ACTION,
-        amount:,
-        authorization_code: auth_code)
-      virtual_gift_card.events.create!(action: Spree::VirtualGiftCard::CAPTURE_ACTION,
-        amount:,
-        authorization_code: auth_code)
-
-      resp = gift_card_payment_method.purchase(amount * 100.0, virtual_gift_card, gateway_options)
-      expect(resp.success?).to be false
-      expect(resp.message).to include I18n.t('spree.virtual_gift_card.unable_to_find')
-    end
-
-    it "captures a purchase if it can find a pending credit for the correct amount" do
-      amount = 100.0
-      virtual_gift_card = create(:virtual_gift_card, amount: 150)
-      auth_code = virtual_gift_card.generate_authorization_code
-      virtual_gift_card.events.create!(action: Spree::VirtualGiftCard::ELIGIBLE_ACTION,
-        amount:,
-        authorization_code: auth_code)
-
-      resp = gift_card_payment_method.purchase(amount * 100.0, virtual_gift_card, gateway_options)
-      expect(resp.success?).to be true
-      expect(resp.message).to include I18n.t('spree.virtual_gift_card.successful_action', action: Spree::VirtualGiftCard::CAPTURE_ACTION)
+    it 'authorizes and captures without a prior eligibility event' do
+      card = create(:redeemable_virtual_gift_card, amount: 150)
+      response = described_class.new.purchase(10000, card, gateway_options)
+      expect(response).to be_success
+      expect(card.reload.amount_remaining).to eq(50)
     end
   end
 

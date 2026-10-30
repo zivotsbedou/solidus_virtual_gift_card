@@ -3,18 +3,31 @@
 require 'spec_helper'
 
 describe Spree::Order do
-  describe '#finalize' do
-    context 'the order contains gift cards and transitions to complete' do
-      subject { order.finalize }
+  it 'allocates gift payments after the checkout flow is rebuilt' do
+    Spree::Order.checkout_flow(&Spree::Order.checkout_flow)
+    create(:gift_card_payment_method)
+    card = create(:redeemable_virtual_gift_card, amount: 1000)
+    order = create(:order_with_totals, state: 'payment', gift_card_codes: [card.redemption_code])
+    expect(order.next).to be_truthy
+    expect(order.payments.gift_cards.sum(:amount)).to eq(order.total)
+  end
 
-      let(:gift_card) { create(:virtual_gift_card) }
-      let(:order) { create(:order_with_line_items, state: 'complete', line_items: [gift_card.line_item]) }
+  describe '#send_gift_card_emails payment gate' do
+    let(:order) { create(:completed_order_with_totals, user: nil, email: 'guest@example.com', payment_state: 'paid') }
+    let!(:card) { create(:virtual_gift_card, line_item: order.line_items.first) }
 
-      it 'makes the gift card redeemable' do
-        subject
-        expect(gift_card.reload.redeemable).to be true
-        expect(gift_card.reload.redemption_code).to be_present
-      end
+    it 'keeps an unpaid card inactive' do
+      order.update!(payment_state: 'balance_due')
+      order.send_gift_card_emails
+      expect(card.reload).not_to be_redeemable
+    end
+
+    it 'activates a paid guest card once' do
+      order.send_gift_card_emails
+      code = card.reload.redemption_code
+      expect(code).to be_present
+      order.send_gift_card_emails
+      expect(card.reload.redemption_code).to eq(code)
     end
   end
 
@@ -22,7 +35,7 @@ describe Spree::Order do
     subject { order.send_gift_card_emails }
 
     context 'the order has gift cards' do
-      let(:gift_card) { create(:virtual_gift_card, send_email_at: send_email_at) }
+      let(:gift_card) { create(:redeemable_virtual_gift_card, send_email_at: send_email_at) }
       let(:line_item) { gift_card.line_item }
       let(:gift_card_2) { create(:virtual_gift_card, line_item: line_item, send_email_at: send_email_at) }
       let(:order) { gift_card.line_item.order }

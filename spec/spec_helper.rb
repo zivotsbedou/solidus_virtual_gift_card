@@ -23,6 +23,7 @@ Dir["#{__dir__}/support/**/*.rb"].sort.each { |f| require f }
 SolidusDevSupport::TestingSupport::Factories.load_for(SolidusVirtualGiftCard::Engine)
 
 RSpec.configure do |config|
+  config.include Devise::Test::ControllerHelpers, type: :controller
   config.infer_spec_type_from_file_location!
   config.use_transactional_fixtures = false
 

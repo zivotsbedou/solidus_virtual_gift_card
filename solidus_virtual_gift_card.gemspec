@@ -10,14 +10,14 @@ Gem::Specification.new do |spec|
 
   spec.summary = "Virtual gift card for purchase, drops into the user's account as store credit"
   spec.description = "Virtual gift card for purchase, drops into the user's account as store credit"
-  spec.homepage = 'https://github.com/solidusio-contrib/solidus_virtual_gift_card'
+  spec.homepage = 'https://github.com/zivotsbedou/solidus_virtual_gift_card'
   spec.license = 'BSD-3-Clause'
 
   spec.metadata['homepage_uri'] = spec.homepage
-  spec.metadata['source_code_uri'] = 'https://github.com/solidusio-contrib/solidus_virtual_gift_card'
-  spec.metadata['changelog_uri'] = 'https://github.com/DanielePalombo/solidus_virtual_gift_card/blob/main/CHANGELOG.md'
+  spec.metadata['source_code_uri'] = 'https://github.com/zivotsbedou/solidus_virtual_gift_card'
+  spec.metadata['changelog_uri'] = 'https://github.com/zivotsbedou/solidus_virtual_gift_card/blob/main/CHANGELOG.md'
 
-  spec.required_ruby_version = Gem::Requirement.new('>= 3.1', '< 4')
+  spec.required_ruby_version = Gem::Requirement.new('>= 3.2', '< 5')
 
   # Specify which files should be added to the gem when it is released.
   # The `git ls-files -z` loads the files in the RubyGem that have been added into git.
@@ -29,10 +29,9 @@ Gem::Specification.new do |spec|
   spec.executables = files.grep(%r{^exe/}) { |f| File.basename(f) }
   spec.require_paths = ["lib"]
 
-  spec.add_dependency 'coffee-rails'
   spec.add_dependency 'deface'
-  spec.add_dependency 'solidus_core', ['>= 2.0.0', '< 5']
-  spec.add_dependency 'solidus_support', '~> 0.5'
+  spec.add_dependency 'solidus_core', ['>= 4.8', '< 5']
+  spec.add_dependency 'solidus_support', '>= 0.14.1', '< 1'
 
   spec.add_development_dependency 'pry'
   spec.add_development_dependency 'solidus_dev_support', '~> 2.11'

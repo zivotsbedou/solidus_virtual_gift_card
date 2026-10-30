@@ -11,15 +11,13 @@ module SolidusVirtualGiftCard
 
     engine_name 'solidus_virtual_gift_card'
 
+    initializer "solidus_virtual_gift_card.filter_codes" do |app|
+      app.config.filter_parameters += [:redemption_code, :gift_card_code, :gift_card_codes]
+    end
+
     # use rspec for tests
     config.generators do |g|
       g.test_framework :rspec
-    end
-
-    def self.activate
-      Dir.glob(File.join(File.dirname(__FILE__), '../../app/**/*_decorator*.rb')).sort.each do |c|
-        Rails.configuration.cache_classes ? require(c) : load(c)
-      end
     end
 
     if SolidusSupport.backend_available?
@@ -41,6 +39,14 @@ module SolidusVirtualGiftCard
       end
     end
 
-    config.to_prepare &method(:activate).to_proc
+    initializer "solidus_virtual_gift_card.pub_sub", after: "spree.core.pub_sub" do |app|
+      app.reloader.to_prepare do
+        SolidusVirtualGiftCard::DeliverySubscriber.new.subscribe_to(::Spree::Bus)
+      end
+    end
+
+    initializer "solidus_virtual_gift_card.ignore_overrides", before: :eager_load! do |app|
+      app.autoloaders.main.ignore(root.join("app/overrides"))
+    end
   end
 end
