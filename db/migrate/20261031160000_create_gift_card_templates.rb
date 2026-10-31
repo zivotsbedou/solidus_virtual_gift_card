@@ -7,6 +7,17 @@ class CreateGiftCardTemplates < ActiveRecord::Migration[7.0]
       t.timestamps
     end
     add_reference :spree_variants, :gift_card_template, foreign_key: { to_table: :spree_gift_card_templates }
+    # Keep existing designs and their artwork as templates; their old texts and colours are now
+    # part of the artwork and the template layout.
+    reversible do |direction|
+      direction.up do
+        execute <<~SQL
+          INSERT INTO spree_gift_card_templates (id, name, created_at, updated_at)
+          SELECT id, name, created_at, updated_at FROM spree_gift_card_designs
+        SQL
+        execute "UPDATE active_storage_attachments SET record_type = 'Spree::GiftCardTemplate' WHERE record_type = 'Spree::GiftCardDesign'"
+      end
+    end
     remove_reference :spree_virtual_gift_cards, :design, foreign_key: { to_table: :spree_gift_card_designs }, index: true
     drop_table :spree_gift_card_designs do |t|
       t.string :name, null: false

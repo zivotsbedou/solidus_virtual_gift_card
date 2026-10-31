@@ -78,7 +78,6 @@
       if (!font) delete entry.font
       layout[box.dataset.field] = entry
       layoutField.value = JSON.stringify(layout)
-      refresh()
     }
 
     const select = (box) => {
@@ -103,8 +102,10 @@
       } else {
         selected.dataset[key] = event.target.value
       }
+      // Keep the form current at once; only the preview waits for typing to stop.
+      save(selected)
       clearTimeout(timer)
-      timer = setTimeout(() => save(selected), 400)
+      timer = setTimeout(refresh, 400)
     })
 
     const round = (value, min = 0) => Math.min(1, Math.max(min, Math.round(value * 1000) / 1000))
@@ -135,7 +136,7 @@
       window.addEventListener('pointermove', move)
       window.addEventListener('pointerup', () => {
         window.removeEventListener('pointermove', move)
-        if (moved) save(box)
+        if (moved) { save(box); refresh() }
       }, { once: true })
     })
 

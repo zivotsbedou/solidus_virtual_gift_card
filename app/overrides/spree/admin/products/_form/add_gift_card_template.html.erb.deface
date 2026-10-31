@@ -1,0 +1,7 @@
+<!-- insert_bottom '[data-hook="admin_product_form_right"]' -->
+<% if @product.gift_card? && @product.variants.none? %>
+  <div class="field">
+    <%= f.label :gift_card_template_id, Spree::Variant.human_attribute_name(:gift_card_template) %>
+    <%= f.collection_select :gift_card_template_id, Spree::GiftCardTemplate.order(:name), :id, :name, { include_blank: true }, class: 'custom-select fullwidth' %>
+  </div>
+<% end %>

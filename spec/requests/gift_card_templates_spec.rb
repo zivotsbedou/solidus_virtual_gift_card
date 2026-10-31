@@ -61,4 +61,13 @@ describe 'Gift card template administration', type: :request do
 
     expect(variant.reload.gift_card_template).to eq(template)
   end
+
+  it 'lets a gift card without variants pick its template on the product' do
+    template = Spree::GiftCardTemplate.create!(name: 'Plain')
+    product = create(:product, gift_card: true)
+
+    patch "/admin/products/#{product.slug}", params: { product: { gift_card_template_id: template.id } }
+
+    expect(product.master.reload.gift_card_template).to eq(template)
+  end
 end

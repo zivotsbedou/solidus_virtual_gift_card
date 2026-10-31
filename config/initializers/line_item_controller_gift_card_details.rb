@@ -1,7 +1,7 @@
 # frozen_string_literal: true
 
 Rails.application.config.to_prepare do
-  %i[gift_card gift_card_open_amount].each do |attribute|
+  %i[gift_card gift_card_open_amount gift_card_template_id].each do |attribute|
     Spree::PermittedAttributes.product_attributes << attribute unless Spree::PermittedAttributes.product_attributes.include?(attribute)
   end
   Spree::PermittedAttributes.variant_attributes << :gift_card_template_id unless Spree::PermittedAttributes.variant_attributes.include?(:gift_card_template_id)
