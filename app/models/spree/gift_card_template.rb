@@ -18,8 +18,13 @@ class Spree::GiftCardTemplate < Spree::Base
   validate :layout_is_placement
 
   # The configured card layout with this template's field boxes, fonts and colours.
+  # An invalid layout (shown back with its error) leaves the configured one.
   def card_layout(base = SolidusVirtualGiftCard::Config.card_image_layout)
-    base.to_h { |field, style| [field, style.merge((layout || {}).fetch(field.to_s, {}).slice(*PLACEMENT, *STYLE).symbolize_keys)] }
+    overrides = layout.is_a?(Hash) ? layout : {}
+    base.to_h do |field, style|
+      override = overrides[field.to_s]
+      [field, override.is_a?(Hash) ? style.merge(override.slice(*PLACEMENT, *STYLE).symbolize_keys) : style]
+    end
   end
 
   # The layout editor submits JSON; a blank value goes back to the configured layout.

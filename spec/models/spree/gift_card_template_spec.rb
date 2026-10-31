@@ -40,6 +40,15 @@ describe Spree::GiftCardTemplate do
     expect(template.card_layout(base)[:code]).to include(color: '#ffffff')
   end
 
+  it 'keeps the configured layout while an invalid one is shown back' do
+    ['{"code":7}', '[]'].each do |layout|
+      template = described_class.new(name: 'Bad', layout: layout)
+
+      expect(template).not_to be_valid
+      expect(template.card_layout(base)).to eq(base)
+    end
+  end
+
   it 'goes back to the configured layout when cleared' do
     template = described_class.new(name: 'Reset', layout: '')
 
