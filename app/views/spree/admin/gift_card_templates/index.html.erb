@@ -27,7 +27,7 @@
           <td><%= safe_join(template.variants.map { |variant| link_to variant.descriptive_name, spree.edit_admin_product_variant_path(variant.product, variant) }, tag.br) %></td>
           <td class="actions">
             <%= link_to_edit template, no_text: true %>
-            <%= link_to_delete template, no_text: true if template.variants.none? %>
+            <%= link_to_delete template, no_text: true if template.variants.none? && template.virtual_gift_cards.none? %>
           </td>
         </tr>
       <% end %>

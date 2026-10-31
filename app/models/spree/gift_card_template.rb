@@ -11,6 +11,7 @@ class Spree::GiftCardTemplate < Spree::Base
 
   has_one_attached :background
   has_many :variants, class_name: 'Spree::Variant', inverse_of: :gift_card_template, dependent: :restrict_with_error
+  has_many :virtual_gift_cards, class_name: 'Spree::VirtualGiftCard', dependent: :restrict_with_error
 
   validates :name, presence: true
   validate :background_is_image, if: -> { background.attached? }

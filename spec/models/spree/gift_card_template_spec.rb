@@ -19,6 +19,13 @@ describe Spree::GiftCardTemplate do
     expect(template.destroy).to be(false)
   end
 
+  it 'keeps templates that cards were bought with' do
+    template = described_class.create!(name: 'Bought')
+    create(:virtual_gift_card, gift_card_template: template)
+
+    expect(template.destroy).to be(false)
+  end
+
   it 'places fields where staff put them' do
     template = described_class.new(name: 'Moved', layout: '{"code":{"x":0.6,"y":0.2,"size":0.08,"font":"sans bold","color":"#ae9ac6"}}')
 

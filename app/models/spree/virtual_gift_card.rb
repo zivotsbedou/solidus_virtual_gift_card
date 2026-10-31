@@ -20,6 +20,7 @@ class Spree::VirtualGiftCard < Spree::Base
   belongs_to :line_item, class_name: 'Spree::LineItem', optional: true
   belongs_to :inventory_unit, class_name: 'Spree::InventoryUnit', optional: true
   belongs_to :created_by, class_name: Spree::UserClassHandle.new, optional: true
+  belongs_to :gift_card_template, class_name: 'Spree::GiftCardTemplate', optional: true
   has_one :order, through: :line_item
   has_many :events, class_name: 'Spree::VirtualGiftCardEvent', dependent: :destroy
 

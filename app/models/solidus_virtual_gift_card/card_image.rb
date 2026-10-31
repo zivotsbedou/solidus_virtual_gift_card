@@ -10,7 +10,7 @@ module SolidusVirtualGiftCard
     def initialize(gift_card, config: SolidusVirtualGiftCard::Config, template: nil)
       @gift_card = gift_card
       @variant = gift_card.line_item&.variant
-      @template = template || @variant&.gift_card_template
+      @template = template || gift_card.gift_card_template || @variant&.gift_card_template
       @config = config
     end
 

@@ -84,4 +84,15 @@ describe SolidusVirtualGiftCard::CardImage do
     expect(image.extract_area(0, 0, 800, 560).min).to eq(255) # nothing left in the default spot
     expect(image.extract_area(874, 620, 700, 200).min).to be < 100
   end
+
+  it 'keeps the template the card was bought with' do
+    bought = Spree::GiftCardTemplate.create!(name: 'Bought', layout: { amount: { x: 0.5, y: 0.5, color: '#ff0000' } })
+    gift_card.update!(gift_card_template: bought)
+    gift_card.line_item.variant.update!(gift_card_template: Spree::GiftCardTemplate.create!(name: 'Later'))
+    allow(SolidusVirtualGiftCard::Config).to receive(:card_image_layout).and_return(amount: { x: 0.05, y: 0.05, width: 0.4, size: 0.1 })
+
+    image = decode(described_class.new(gift_card).to_png)
+
+    expect(image.extract_area(874, 620, 700, 200).min).to be < 100
+  end
 end
