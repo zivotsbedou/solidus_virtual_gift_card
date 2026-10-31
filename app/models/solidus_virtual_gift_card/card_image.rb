@@ -1,21 +1,21 @@
 # frozen_string_literal: true
 
 module SolidusVirtualGiftCard
-  # Draws a gift card's details onto its design (or product image, or a plain card) as a PNG.
+  # Draws a gift card's details onto its variant's image (the card design), or a plain card, as a PNG.
   #
   # Each card_image_layout field is a text field, or :qr for the redemption QR code, drawn in its
   # color on its background. A colour is [r, g, b] or "#rrggbb".
   class CardImage
     def initialize(gift_card, config: SolidusVirtualGiftCard::Config)
       @gift_card = gift_card
-      @design = gift_card.design
+      @variant = gift_card.line_item&.variant
       @config = config
     end
 
     def to_png
       require 'vips'
 
-      layout = @design ? @design.card_layout(@config.card_image_layout) : @config.card_image_layout
+      layout = @variant ? @variant.card_layout(@config.card_image_layout) : @config.card_image_layout
       canvas = layout.reduce(background) do |image, (field, style)|
         field.to_sym == :qr ? draw_qr(image, style) : draw_field(image, field, style)
       end
@@ -29,10 +29,7 @@ module SolidusVirtualGiftCard
     private
 
     def background
-      return opaque(Vips::Image.new_from_buffer(@design.background.download, '')) if @design&.background&.attached?
-
-      variant = @gift_card.line_item&.variant
-      image = variant && ::Spree::Config.variant_gallery_class.new(variant).images.first
+      image = @variant && ::Spree::Config.variant_gallery_class.new(@variant).images.first
       return opaque(Vips::Image.new_from_buffer(image.attachment.download, '')) if image
 
       width, height = @config.card_image_size

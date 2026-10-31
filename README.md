@@ -93,14 +93,14 @@ a field may set `font` and `fontfile`. Field text comes from the
 
 ## Card designs
 
-Staff manage designs under **Gift cards → Card designs** in the admin: a background
-image carrying the design's fixed texts, where each field sits with its font, size and
-colour, and whether customers are offered it. The edit page shows the finished card;
-staff drag each field's frame on it to place the field for that design. Storefronts
-pass `gift_card_details[design_id]`; inactive designs are refused for new cards.
+Each variant of a gift card product is a card design: customers pick it with the product's
+option values, the card is drawn on the variant's image (artwork carrying the design's fixed
+texts), and Solidus handles its order, availability and images. Under **Gift cards → Card
+designs** staff drag each field's frame on the finished card to place it for that variant,
+and set its font (one of `card_image_fonts`), size and colour; this is stored in the
+variant's `gift_card_layout` over `card_image_layout`.
 
-A design may move or resize any field and set its `font` (one of `card_image_fonts`),
-`size` and `color` (its `layout`). A `:qr` field (`x`, `y`, `size`) draws a QR code in its `color` on its `background` for
+A `:qr` field (`x`, `y`, `size`) draws a QR code in its `color` on its `background` for
 `Config.card_qr_url`, a callable given the gift card:
 
 ```ruby

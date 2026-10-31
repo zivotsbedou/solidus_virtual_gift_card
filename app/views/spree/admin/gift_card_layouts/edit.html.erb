@@ -1,50 +1,54 @@
-<% admin_breadcrumb(link_to(t('spree.admin.gift_card_designs.title'), spree.admin_gift_card_designs_path)) %>
-<% admin_breadcrumb(@object.name) %>
+<% admin_breadcrumb(link_to(t('spree.admin.gift_card_layouts.title'), spree.admin_gift_card_layouts_path)) %>
+<% admin_breadcrumb(@variant.descriptive_name) %>
 
-<%= render 'spree/shared/error_messages', target: @object %>
-<%= form_for [:admin, @object], html: { multipart: true, id: 'gift_card_design_form' } do |f| %>
-  <fieldset>
-    <%= render 'form', f: f %>
-    <%= f.hidden_field :layout, value: @object.layout&.to_json %>
-    <%= render 'spree/admin/shared/edit_resource_links' %>
-  </fieldset>
+<% content_for :page_actions do %>
+  <ul class="actions inline-menu">
+    <li><%= link_to t('spree.admin.gift_card_layouts.edit_variant'), spree.edit_admin_product_variant_path(@variant.product, @variant), class: 'btn btn-default' unless @variant.is_master? %></li>
+  </ul>
 <% end %>
+
 <fieldset>
-  <legend><%= t('spree.admin.gift_card_designs.preview') %></legend>
-  <div id="gift_card_design_canvas" style="position: relative; display: inline-block; max-width: 100%; user-select: none;">
-    <%= image_tag preview_admin_gift_card_design_path(@object, v: @object.updated_at.to_i), id: 'gift_card_design_preview', alt: t('spree.admin.gift_card_designs.preview'), draggable: false, style: 'display: block; max-width: 100%; height: auto;' %>
+  <legend><%= t('spree.admin.gift_card_layouts.preview') %></legend>
+  <div id="gift_card_layout_canvas" style="position: relative; display: inline-block; max-width: 100%; user-select: none;">
+    <%= image_tag preview_admin_gift_card_layout_path(@variant, v: @variant.updated_at.to_i), id: 'gift_card_layout_preview', alt: t('spree.admin.gift_card_layouts.preview'), draggable: false, style: 'display: block; max-width: 100%; height: auto;' %>
     <% hex = ->(value) { value.is_a?(Array) ? format('#%02x%02x%02x', *value) : value } %>
-    <% @object.card_layout.each do |field, style| %>
-      <div data-field="<%= field %>" data-name="<%= t(field, scope: 'spree.admin.gift_card_designs.fields', default: field.to_s.humanize) %>"
+    <% @variant.card_layout.each do |field, style| %>
+      <div data-field="<%= field %>" data-name="<%= t(field, scope: 'spree.admin.gift_card_layouts.fields', default: field.to_s.humanize) %>"
            data-x="<%= style[:x] %>" data-y="<%= style[:y] %>" data-width="<%= style[:width] %>" data-size="<%= style[:size] %>"
            data-height="<%= style[:height] || (style[:size] * 1.25).round(4) %>" <%= 'data-qr' if field.to_sym == :qr %>
            data-font="<%= style[:font] %>" data-color="<%= hex.(style.fetch(:color, field.to_sym == :qr ? [45, 49, 66] : [33, 33, 33])) %>"
            data-background="<%= hex.(style.fetch(:background, [255, 255, 255])) %>"
            style="position: absolute; box-sizing: border-box; border: 1px dashed #e11d48; background: rgba(225, 29, 72, 0.08); cursor: move; touch-action: none;">
-        <span style="position: absolute; left: 0; bottom: 100%; padding: 0 3px; font-size: 10px; line-height: 14px; white-space: nowrap; color: #fff; background: #e11d48;"><%= t(field, scope: 'spree.admin.gift_card_designs.fields', default: field.to_s.humanize) %></span>
+        <span style="position: absolute; left: 0; bottom: 100%; padding: 0 3px; font-size: 10px; line-height: 14px; white-space: nowrap; color: #fff; background: #e11d48;"><%= t(field, scope: 'spree.admin.gift_card_layouts.fields', default: field.to_s.humanize) %></span>
         <span data-handle style="position: absolute; right: -6px; bottom: -6px; width: 12px; height: 12px; background: #e11d48; cursor: nwse-resize;"></span>
       </div>
     <% end %>
   </div>
-  <p id="gift_card_design_field" hidden>
+  <p id="gift_card_layout_field" hidden>
     <strong data-name></strong>
-    <label data-text><%= t('spree.admin.gift_card_designs.font') %>
+    <label data-text><%= t('spree.admin.gift_card_layouts.font') %>
       <select data-key="font"><% SolidusVirtualGiftCard::Config.card_image_fonts.each do |font| %><option><%= font %></option><% end %></select></label>
-    <label data-text><%= t('spree.admin.gift_card_designs.font_size') %>
+    <label data-text><%= t('spree.admin.gift_card_layouts.font_size') %>
       <input type="number" data-key="points" min="4" max="200" step="0.5" style="width: 5em;"></label>
-    <label><%= t('spree.admin.gift_card_designs.font_color') %> <input type="color" data-key="color"></label>
-    <label data-qr><%= t('spree.admin.gift_card_designs.qr_background') %> <input type="color" data-key="background"></label>
+    <label><%= t('spree.admin.gift_card_layouts.font_color') %> <input type="color" data-key="color"></label>
+    <label data-qr><%= t('spree.admin.gift_card_layouts.qr_background') %> <input type="color" data-key="background"></label>
   </p>
-  <p><button type="button" id="gift_card_design_reset_layout" class="btn btn-default"><%= t('spree.admin.gift_card_designs.reset_layout') %></button></p>
+  <p><button type="button" id="gift_card_layout_reset_layout" class="btn btn-default"><%= t('spree.admin.gift_card_layouts.reset_layout') %></button></p>
 </fieldset>
+<%= form_for @variant, url: admin_gift_card_layout_path(@variant), method: :patch, html: { id: 'gift_card_layout_form' } do |f| %>
+  <%= f.hidden_field :gift_card_layout, value: @variant.gift_card_layout&.to_json %>
+  <div class="form-buttons filter-actions actions">
+    <%= f.button t('spree.actions.update'), class: 'btn btn-primary' %>
+  </div>
+<% end %>
 
 <script>
   (() => {
-    const form = document.getElementById('gift_card_design_form')
-    const preview = document.getElementById('gift_card_design_preview')
-    const canvas = document.getElementById('gift_card_design_canvas')
-    const panel = document.getElementById('gift_card_design_field')
-    const layoutField = form.elements['gift_card_design[layout]']
+    const form = document.getElementById('gift_card_layout_form')
+    const preview = document.getElementById('gift_card_layout_preview')
+    const canvas = document.getElementById('gift_card_layout_canvas')
+    const panel = document.getElementById('gift_card_layout_field')
+    const layoutField = form.elements['variant[gift_card_layout]']
     const layout = JSON.parse(layoutField.value || '{}')
     const pointsPerHeight = 105 / 25.4 * 72 // sizes are fractions of the A6 card's 105 mm height
     let timer
@@ -52,8 +56,8 @@
 
     // Redraw the preview from the unsaved form.
     const refresh = () => {
-      const params = new URLSearchParams({ 'gift_card_design[layout]': layoutField.value })
-      preview.src = `<%= preview_admin_gift_card_design_path(@object) %>?${params}`
+      const params = new URLSearchParams({ 'variant[gift_card_layout]': layoutField.value })
+      preview.src = `<%= preview_admin_gift_card_layout_path(@variant) %>?${params}`
     }
 
     // A frame is the field's box, in fractions of the card: x and width of its width, y and height of its height.
@@ -141,7 +145,7 @@
     })
 
 
-    document.getElementById('gift_card_design_reset_layout').addEventListener('click', () => {
+    document.getElementById('gift_card_layout_reset_layout').addEventListener('click', () => {
       layoutField.value = ''
       form.requestSubmit()
     })

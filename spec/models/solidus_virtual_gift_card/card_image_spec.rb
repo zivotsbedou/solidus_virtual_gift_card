@@ -28,10 +28,7 @@ describe SolidusVirtualGiftCard::CardImage do
     expect(image.getpoint(5, 5).map(&:round)).to eq([10, 120, 200])
   end
 
-  context 'with a design' do
-    let(:design) do
-      Spree::GiftCardDesign.create!(name: 'Dark')
-    end
+  context 'with a variant design' do
     let(:layout) do
       { amount: { x: 0.1, y: 0.1, width: 0.8, size: 0.2, color: '#ffffff' },
         code: { x: 0.1, y: 0.4, width: 0.8, height: 0.12, size: 0.1, color: [255, 255, 255], align: :centre },
@@ -40,12 +37,12 @@ describe SolidusVirtualGiftCard::CardImage do
 
     before do
       background = Vips::Image.black(600, 400).new_from_image([45, 49, 66]).copy(interpretation: :srgb)
-      design.background.attach(io: StringIO.new(background.write_to_buffer('.png')), filename: 'dark.png', content_type: 'image/png')
-      gift_card.update!(design: design)
+      upload = Rack::Test::UploadedFile.new(StringIO.new(background.write_to_buffer('.png')), 'image/png', original_filename: 'dark.png')
+      gift_card.line_item.variant.images.create!(attachment: upload)
       allow(SolidusVirtualGiftCard::Config).to receive(:card_image_layout).and_return(layout)
     end
 
-    it 'draws the fields in their colours on the design background' do
+    it 'draws the fields in their colours on the variant image' do
       image = decode(described_class.new(gift_card).to_png)
 
       expect([image.width, image.height]).to eq([600, 400])
@@ -68,5 +65,15 @@ describe SolidusVirtualGiftCard::CardImage do
     gift_card.update!(recipient_name: nil, purchaser_name: nil, gift_message: nil)
 
     expect { described_class.new(gift_card).to_png }.not_to raise_error
+  end
+
+  it 'places fields where the variant layout puts them' do
+    gift_card.line_item.variant.update!(gift_card_layout: { amount: { x: 0.5, y: 0.5, color: '#ff0000' } })
+    allow(SolidusVirtualGiftCard::Config).to receive(:card_image_layout).and_return(amount: { x: 0.05, y: 0.05, width: 0.4, size: 0.1 })
+
+    image = decode(described_class.new(gift_card).to_png)
+
+    expect(image.extract_area(0, 0, 800, 560).min).to eq(255) # nothing left in the default spot
+    expect(image.extract_area(874, 620, 700, 200).min).to be < 100
   end
 end

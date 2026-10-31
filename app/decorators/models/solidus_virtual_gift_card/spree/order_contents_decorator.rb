@@ -53,7 +53,6 @@ module SolidusVirtualGiftCard
               purchaser_name: gift_card_details['purchaser_name'],
               gift_message: gift_card_details['gift_message'],
               delivery: gift_card_details['delivery'].presence || 'recipient',
-              design_id: gift_card_details['design_id'].presence,
               send_email_at: format_date(gift_card_details['send_email_at'])
             )
           end
