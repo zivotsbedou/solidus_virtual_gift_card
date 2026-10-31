@@ -1,0 +1,10 @@
+<!-- insert_bottom '[data-hook="admin_variant_form_additional_fields"]' -->
+<% if @product.gift_card? %>
+  <fieldset class="no-border-bottom">
+    <legend><%= t('spree.admin.gift_card_templates.title') %></legend>
+    <div class="field" data-hook="gift_card_template">
+      <%= f.label :gift_card_template_id %>
+      <%= f.collection_select :gift_card_template_id, Spree::GiftCardTemplate.order(:name), :id, :name, { include_blank: true }, class: 'custom-select fullwidth' %>
+    </div>
+  </fieldset>
+<% end %>

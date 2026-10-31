@@ -28,27 +28,22 @@ describe SolidusVirtualGiftCard::CardImage do
     expect(image.getpoint(5, 5).map(&:round)).to eq([10, 120, 200])
   end
 
-  context 'with a design' do
-    let(:design) do
-      Spree::GiftCardDesign.create!(name: 'Dark', heading: 'Milý dáreček pro:', footer: 'Do obchodu <b>Život s Béďou</b>',
-                                    amount_color: '#ffffff', ink_color: '#ffffff', box_color: '#ffffff')
-    end
+  context 'with a template' do
     let(:layout) do
-      { amount: { x: 0.1, y: 0.1, width: 0.8, size: 0.2, color: :amount },
-        heading: { x: 0.5, y: 0.4, width: 0.8, size: 0.1, color: :ink, align: :centre },
-        footer: { x: 0.1, x_by_align: { centre: 0.5 }, y: 0.91, width: 0.8, size: 0.05, color: :ink, align: :design },
-        note: { x: 0.1, y: 0.55, width: 0.5, size: 0.04, color: :ink, text: 'solidus_virtual_gift_card.card_image.filename' },
+      { amount: { x: 0.1, y: 0.1, width: 0.8, size: 0.2, color: '#ffffff' },
+        code: { x: 0.1, y: 0.4, width: 0.8, height: 0.12, size: 0.1, color: [255, 255, 255], align: :centre },
         qr: { x: 0.7, y: 0.6, size: 0.3 } }
     end
 
     before do
       background = Vips::Image.black(600, 400).new_from_image([45, 49, 66]).copy(interpretation: :srgb)
-      design.background.attach(io: StringIO.new(background.write_to_buffer('.png')), filename: 'dark.png', content_type: 'image/png')
-      gift_card.update!(design: design)
+      template = Spree::GiftCardTemplate.create!(name: 'Dark')
+      template.background.attach(io: StringIO.new(background.write_to_buffer('.png')), filename: 'dark.png', content_type: 'image/png')
+      gift_card.line_item.variant.update!(gift_card_template: template)
       allow(SolidusVirtualGiftCard::Config).to receive(:card_image_layout).and_return(layout)
     end
 
-    it 'draws the design texts in its colours on its background' do
+    it 'draws the fields in their colours on the template artwork' do
       image = decode(described_class.new(gift_card).to_png)
 
       expect([image.width, image.height]).to eq([600, 400])
@@ -67,9 +62,37 @@ describe SolidusVirtualGiftCard::CardImage do
     end
   end
 
+  it 'leaves out the code and QR code of a card without a code' do
+    allow(SolidusVirtualGiftCard::Config).to receive(:card_qr_url).and_return(->(card) { "https://shop.test/poukaz/#{card.redemption_code.presence || raise}" })
+
+    expect { described_class.new(Spree::VirtualGiftCard.new(amount: 500, currency: 'USD')).to_png }.not_to raise_error
+  end
+
   it 'leaves out empty fields' do
     gift_card.update!(recipient_name: nil, purchaser_name: nil, gift_message: nil)
 
     expect { described_class.new(gift_card).to_png }.not_to raise_error
+  end
+
+  it 'places fields where the template layout puts them' do
+    template = Spree::GiftCardTemplate.create!(name: 'Moved', layout: { amount: { x: 0.5, y: 0.5, color: '#ff0000' } })
+    gift_card.line_item.variant.update!(gift_card_template: template)
+    allow(SolidusVirtualGiftCard::Config).to receive(:card_image_layout).and_return(amount: { x: 0.05, y: 0.05, width: 0.4, size: 0.1 })
+
+    image = decode(described_class.new(gift_card).to_png)
+
+    expect(image.extract_area(0, 0, 800, 560).min).to eq(255) # nothing left in the default spot
+    expect(image.extract_area(874, 620, 700, 200).min).to be < 100
+  end
+
+  it 'keeps the template the card was bought with' do
+    bought = Spree::GiftCardTemplate.create!(name: 'Bought', layout: { amount: { x: 0.5, y: 0.5, color: '#ff0000' } })
+    gift_card.update!(gift_card_template: bought)
+    gift_card.line_item.variant.update!(gift_card_template: Spree::GiftCardTemplate.create!(name: 'Later'))
+    allow(SolidusVirtualGiftCard::Config).to receive(:card_image_layout).and_return(amount: { x: 0.05, y: 0.05, width: 0.4, size: 0.1 })
+
+    image = decode(described_class.new(gift_card).to_png)
+
+    expect(image.extract_area(874, 620, 700, 200).min).to be < 100
   end
 end

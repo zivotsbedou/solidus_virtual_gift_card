@@ -2,8 +2,9 @@
 
 ## Unreleased
 
-- Card designs managed in the admin with a live preview; customers choose one.
-  Card images draw design colours and texts and an optional QR code.
+- Card templates: artwork plus each field's box, font, size and colour, placed on
+  a live preview. Gift card variants pick a template. Card images can carry a QR
+  code.
 - Configurable redemption code length; codes avoid look-alike characters and
   ignore case, spaces and dashes when typed.
 - Customer-chosen amounts for gift card products, within a configured range.

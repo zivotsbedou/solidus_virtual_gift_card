@@ -13,6 +13,13 @@ describe 'Gift card delivery' do
     contents.add(variant, 1, 'gift_card_details' => details).gift_cards.last
   end
 
+  it 'keeps the template of the variant bought' do
+    template = Spree::GiftCardTemplate.create!(name: 'Christmas')
+    variant.update!(gift_card_template: template)
+
+    expect(card({}).gift_card_template).to eq(template)
+  end
+
   it 'sends to the recipient by default' do
     expect(card('recipient_email' => 'friend@example.com').delivery_email).to eq('friend@example.com')
   end

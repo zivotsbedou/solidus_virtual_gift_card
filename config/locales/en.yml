@@ -2,19 +2,26 @@
 en:
   spree:
     admin:
-      gift_card_designs:
-        title: Card designs
-        new: New card design
-        none: No card designs yet. Customers get a plain card.
-        explanation: Customers choose an active design when they buy a gift card. The card's amount, code, QR code, recipient and message are drawn on its background.
+      gift_card_templates:
+        title: Card templates
+        new: New card template
+        none: No card templates yet.
+        explanation: A template is the card artwork and where the amount, code, QR code, recipient and message are drawn on it. Each gift card variant picks its template.
+        background_hint: "PNG or JPEG artwork with the card's fixed texts, 1748 × 1240 px (A6 landscape at 300 dpi)."
+
         preview: Preview
-        background_hint: "PNG or JPEG artwork without the texts the card adds, 1748 × 1240 px (A6 landscape at 300 dpi)."
-        footer_hint: "Wrap words in <b>…</b> to make them bold."
-        position_hint: Lower numbers come first in the shop.
-        active_hint: Only active designs are offered; seasonal designs can be switched off.
-        alignments:
-          low: Left
-          centre: Centred
+        reset_layout: Use the default layout
+        font: Font
+        font_size: Size (pt)
+        font_color: Colour
+        qr_background: Background
+        fields:
+          amount: Amount
+          qr: QR code
+          code: Code
+          recipient_name: Recipient
+          purchaser_name: Sender
+          gift_message: Message
         sample:
           recipient_name: Anna
           purchaser_name: Mike
@@ -142,18 +149,14 @@ en:
       gift_message: "%{value}"
   activerecord:
     models:
-      spree/gift_card_design:
-        one: Card design
-        other: Card designs
+      spree/gift_card_template:
+        one: Card template
+        other: Card templates
     attributes:
-      spree/gift_card_design:
+      spree/gift_card_template:
         name: Name
-        background: Background
-        heading: Heading
-        footer: Footer
-        footer_align: Footer alignment
-        amount_color: Amount colour
-        ink_color: Text colour
-        box_color: Text colour in the box
-        active: Offered to customers
-        position: Order
+        background: Artwork
+        layout: Layout
+      spree/variant:
+        gift_card_template: Card template
+        gift_card_template_id: Card template

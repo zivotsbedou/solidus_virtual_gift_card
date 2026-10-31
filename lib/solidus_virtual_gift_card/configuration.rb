@@ -26,7 +26,7 @@ module SolidusVirtualGiftCard
     class_name_attribute :card_image_class, default: 'SolidusVirtualGiftCard::CardImage'
 
     # Card size when the gift card product has no image to draw on.
-    attr_writer :card_image_size, :card_image_background, :card_image_layout
+    attr_writer :card_image_size, :card_image_background, :card_image_layout, :card_image_fonts
 
     # URL the card's QR code opens, given the gift card; nil leaves out the QR code.
     attr_accessor :card_qr_url
@@ -39,7 +39,13 @@ module SolidusVirtualGiftCard
       @card_image_background ||= [255, 255, 255]
     end
 
-    # Where each field is drawn, as fractions of the card's width and height.
+    # Fonts staff can pick for a field in a card design.
+    def card_image_fonts
+      @card_image_fonts ||= ['sans', 'sans bold', 'monospace bold']
+    end
+
+    # Each field is a box, as fractions of the card: x and width of its width; y, height and the
+    # font size (or QR code size) of its height. Text wraps at the width and is cut at the height.
     # Each field's text comes from the solidus_virtual_gift_card.card_image.<field> translation.
     def card_image_layout
       @card_image_layout ||= {
