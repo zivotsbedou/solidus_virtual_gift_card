@@ -4,8 +4,7 @@ module SolidusVirtualGiftCard
   # Draws a gift card's details onto its design (or product image, or a plain card) as a PNG.
   #
   # Each card_image_layout field is a text field, or :qr for the redemption QR code. A field's
-  # color may be a design role (:amount, :ink or :box); its align may be :design to follow the
-  # design's footer alignment, with x_by_align giving x per alignment. A field with text: draws
+  # color may be a design role (:amount, :ink or :box). A field with text: draws
   # that translation as is.
   class CardImage
     DEFAULT_INK = [33, 33, 33].freeze
@@ -48,24 +47,18 @@ module SolidusVirtualGiftCard
       markup.blank? ? image : draw(image, markup, style)
     end
 
-    # Pango markup; customer-entered text is escaped, and the design footer may use <b>.
+    # Pango markup, with customer-entered text escaped.
     def markup_for(field)
-      case field
-      when :heading then ERB::Util.html_escape(@design&.heading)
-      when :footer then ERB::Util.html_escape(@design&.footer).gsub(%r{&lt;(/?)b&gt;}, '<\1b>')
-      else
-        value = case field
-                when :amount then @gift_card.formatted_amount
-                when :code then @gift_card.formatted_redemption_code
-                else @gift_card.public_send(field)
-                end
-        ERB::Util.html_escape(I18n.t("solidus_virtual_gift_card.card_image.#{field}", value: value)) if value.present?
-      end
+      value = case field
+              when :amount then @gift_card.formatted_amount
+              when :code then @gift_card.formatted_redemption_code
+              else @gift_card.public_send(field)
+              end
+      ERB::Util.html_escape(I18n.t("solidus_virtual_gift_card.card_image.#{field}", value: value)) if value.present?
     end
 
     def draw(image, markup, style)
       align = style.fetch(:align, :low)
-      align = (@design&.footer_align || :low).to_sym if align == :design
       mask = Vips::Image.text(
         markup,
         font: "#{style.fetch(:font, 'sans')} #{(style.fetch(:size) * image.height).round}",
@@ -75,7 +68,7 @@ module SolidusVirtualGiftCard
         dpi: 72,
         wrap: :word
       )
-      x = ((style.dig(:x_by_align, align) || style.fetch(:x)) * image.width).round
+      x = (style.fetch(:x) * image.width).round
       x -= mask.width / 2 if align == :centre
       ink = mask.new_from_image(color(style.fetch(:color, :ink))).copy(interpretation: :srgb).bandjoin(mask)
       opaque(image.bandjoin(255).composite2(ink, :over, x: x, y: (style.fetch(:y) * image.height).round))

@@ -49,24 +49,13 @@ describe Spree::GiftCardDesign do
   end
 
   describe '#card_layout' do
-    let(:base) do
-      { heading: { x: 0.3, y: 0.5, width: 0.5, size: 0.05, align: :centre },
-        footer: { x: 0.1, x_by_align: { centre: 0.3 }, y: 0.8, width: 0.4, size: 0.03, align: :design } }
-    end
-
-    it 'follows the footer alignment of the design' do
-      footer = described_class.new(footer_align: 'centre').card_layout(base)[:footer]
-
-      expect(footer).to include(x: 0.3, align: :centre)
-      expect(footer).not_to have_key(:x_by_align)
-    end
+    let(:base) { { code: { x: 0.3, y: 0.5, width: 0.5, size: 0.05, align: :centre } } }
 
     it 'places fields where staff put them' do
-      design = described_class.new(name: 'Moved', footer_align: 'low', layout: '{"heading":{"x":0.6,"y":0.2,"size":0.08}}')
+      design = described_class.new(name: 'Moved', layout: '{"code":{"x":0.6,"y":0.2,"size":0.08}}')
 
       expect(design).to be_valid
-      expect(design.card_layout(base)[:heading]).to include(x: 0.6, y: 0.2, width: 0.5, size: 0.08, align: :centre)
-      expect(design.card_layout(base)[:footer]).to include(x: 0.1, align: :low)
+      expect(design.card_layout(base)[:code]).to eq(x: 0.6, y: 0.2, width: 0.5, size: 0.08, align: :centre)
     end
 
     it 'goes back to the configured layout when cleared' do
@@ -75,8 +64,8 @@ describe Spree::GiftCardDesign do
   end
 
   it 'rejects layouts that are not fractions of the card' do
-    expect(described_class.new(name: 'Bad', layout: '{"heading":{"x":2}}')).not_to be_valid
-    expect(described_class.new(name: 'Bad', layout: '{"heading":{"colour":"red"}}')).not_to be_valid
+    expect(described_class.new(name: 'Bad', layout: '{"code":{"x":2}}')).not_to be_valid
+    expect(described_class.new(name: 'Bad', layout: '{"code":{"colour":"red"}}')).not_to be_valid
     expect(described_class.new(name: 'Bad', layout: 'not json')).not_to be_valid
   end
 end

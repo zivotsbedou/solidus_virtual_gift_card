@@ -3,7 +3,6 @@
 # A card look customers choose at purchase: background artwork plus the texts and colours drawn on it.
 class Spree::GiftCardDesign < Spree::Base
   COLOR = /\A#\h{6}\z/
-  ALIGNMENTS = %w[low centre].freeze
   ROLES = %i[amount ink box].freeze
   # Where a field sits, as fractions of the card: x and width of its width, y and size of its height.
   PLACEMENT = %w[x y width size].freeze
@@ -14,7 +13,6 @@ class Spree::GiftCardDesign < Spree::Base
 
   validates :name, presence: true
   validates :amount_color, :ink_color, :box_color, format: { with: COLOR }
-  validates :footer_align, inclusion: { in: ALIGNMENTS }
   validates :position, numericality: { only_integer: true, greater_than_or_equal_to: 0 }
   validate :background_is_image, if: -> { background.attached? }
   validate :layout_is_placement
@@ -27,15 +25,9 @@ class Spree::GiftCardDesign < Spree::Base
     public_send("#{role}_color").delete('#').scan(/../).map(&:hex)
   end
 
-  # The configured card layout with this design's footer alignment and field placement.
+  # The configured card layout with this design's field placement.
   def card_layout(base = SolidusVirtualGiftCard::Config.card_image_layout)
-    base.to_h do |field, style|
-      style = style.dup
-      style[:align] = footer_align.to_sym if style[:align] == :design
-      style[:x] = style.dig(:x_by_align, style.fetch(:align, :low)) || style[:x]
-      style.delete(:x_by_align)
-      [field, style.merge((layout || {}).fetch(field.to_s, {}).slice(*PLACEMENT).symbolize_keys)]
-    end
+    base.to_h { |field, style| [field, style.merge((layout || {}).fetch(field.to_s, {}).slice(*PLACEMENT).symbolize_keys)] }
   end
 
   # The layout editor submits JSON; a blank value goes back to the configured layout.

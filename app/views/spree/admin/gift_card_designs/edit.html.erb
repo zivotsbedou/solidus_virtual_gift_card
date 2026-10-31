@@ -13,11 +13,10 @@
   <legend><%= t('spree.admin.gift_card_designs.preview') %></legend>
   <div id="gift_card_design_canvas" style="position: relative; display: inline-block; max-width: 100%; user-select: none;">
     <%= image_tag preview_admin_gift_card_design_path(@object, v: @object.updated_at.to_i), id: 'gift_card_design_preview', alt: t('spree.admin.gift_card_designs.preview'), draggable: false, style: 'display: block; max-width: 100%; height: auto;' %>
-    <% default_layout = SolidusVirtualGiftCard::Config.card_image_layout %>
     <% @object.card_layout.each do |field, style| %>
       <div data-field="<%= field %>" data-x="<%= style[:x] %>" data-y="<%= style[:y] %>" data-width="<%= style[:width] %>"
            data-size="<%= style[:size] %>" data-align="<%= style.fetch(:align, :low) %>"
-           <%= 'data-qr' if field.to_sym == :qr %> <%= 'data-follows-alignment' if default_layout.dig(field, :align) == :design %>
+           <%= 'data-qr' if field.to_sym == :qr %>
            style="position: absolute; box-sizing: border-box; border: 1px dashed #e11d48; background: rgba(225, 29, 72, 0.08); cursor: move; touch-action: none;">
         <span style="position: absolute; left: 0; bottom: 100%; padding: 0 3px; font-size: 10px; line-height: 14px; white-space: nowrap; color: #fff; background: #e11d48;"><%= t(field, scope: 'spree.admin.gift_card_designs.fields', default: field.to_s.humanize) %></span>
         <span data-handle style="position: absolute; right: -6px; bottom: -6px; width: 12px; height: 12px; background: #e11d48; cursor: nwse-resize;"></span>
@@ -34,7 +33,7 @@
     const canvas = document.getElementById('gift_card_design_canvas')
     const layoutField = form.elements['gift_card_design[layout]']
     const layout = JSON.parse(layoutField.value || '{}')
-    const fields = ['heading', 'footer', 'footer_align', 'amount_color', 'ink_color', 'box_color', 'layout']
+    const fields = ['amount_color', 'ink_color', 'box_color', 'layout']
     const lineHeight = 1.25 // a text frame shows one line of its font size
     let timer
 
@@ -95,9 +94,6 @@
 
     form.addEventListener('input', (event) => {
       if (event.target.type === 'file') return
-      if (event.target.name === 'gift_card_design[footer_align]') {
-        canvas.querySelectorAll('[data-follows-alignment]').forEach((box) => { box.dataset.align = event.target.value; place(box) })
-      }
       clearTimeout(timer)
       timer = setTimeout(refresh, 400)
     })

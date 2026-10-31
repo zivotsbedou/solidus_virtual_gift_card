@@ -11,19 +11,6 @@
       <p class="info"><%= t('spree.admin.gift_card_designs.background_hint') %></p>
       <%= f.error_message_on :background %>
     <% end %>
-    <%= f.field_container :heading do %>
-      <%= f.label :heading %>
-      <%= f.text_field :heading, class: 'fullwidth' %>
-    <% end %>
-    <%= f.field_container :footer do %>
-      <%= f.label :footer %>
-      <%= f.text_area :footer, rows: 2, class: 'fullwidth' %>
-      <p class="info"><%= t('spree.admin.gift_card_designs.footer_hint') %></p>
-    <% end %>
-    <%= f.field_container :footer_align do %>
-      <%= f.label :footer_align %>
-      <%= f.select :footer_align, Spree::GiftCardDesign::ALIGNMENTS.map { |align| [t(align, scope: 'spree.admin.gift_card_designs.alignments'), align] }, {}, class: 'custom-select' %>
-    <% end %>
   </div>
   <div class="col-6">
     <% Spree::GiftCardDesign::ROLES.each do |role| %>

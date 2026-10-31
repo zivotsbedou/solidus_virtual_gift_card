@@ -30,13 +30,11 @@ describe SolidusVirtualGiftCard::CardImage do
 
   context 'with a design' do
     let(:design) do
-      Spree::GiftCardDesign.create!(name: 'Dark', heading: 'Milý dáreček pro:', footer: 'Do obchodu <b>Život s Béďou</b>',
-                                    amount_color: '#ffffff', ink_color: '#ffffff', box_color: '#ffffff')
+      Spree::GiftCardDesign.create!(name: 'Dark', amount_color: '#ffffff', ink_color: '#ffffff', box_color: '#ffffff')
     end
     let(:layout) do
       { amount: { x: 0.1, y: 0.1, width: 0.8, size: 0.2, color: :amount },
-        heading: { x: 0.5, y: 0.4, width: 0.8, size: 0.1, color: :ink, align: :centre },
-        footer: { x: 0.1, x_by_align: { centre: 0.5 }, y: 0.91, width: 0.8, size: 0.05, color: :ink, align: :design },
+        code: { x: 0.5, y: 0.4, width: 0.8, size: 0.1, color: :ink, align: :centre },
         note: { x: 0.1, y: 0.55, width: 0.5, size: 0.04, color: :ink, text: 'solidus_virtual_gift_card.card_image.filename' },
         qr: { x: 0.7, y: 0.6, size: 0.3 } }
     end
