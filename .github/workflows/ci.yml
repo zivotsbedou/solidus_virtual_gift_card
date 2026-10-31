@@ -12,5 +12,7 @@ jobs:
           ruby-version: '4.0'
           bundler-cache: true
       - uses: browser-actions/setup-chrome@v1
+      # CardImage draws with libvips; fonts give it a sans and a monospace face.
+      - run: sudo apt-get update && sudo apt-get install -y libvips42 fonts-dejavu-core
       - run: bundle exec rake extension:test_app
       - run: bundle exec rspec

@@ -10,6 +10,15 @@ module SolidusVirtualGiftCard
         end
       end
 
+      def gift_card_open_amount?
+        gift_card? && product.gift_card_open_amount?
+      end
+
+      # The customer chose this price; the variant price does not apply.
+      def recalculate_price
+        super unless gift_card_open_amount?
+      end
+
       def redemption_codes
         gift_cards.map { |gc| { amount: gc.formatted_amount, redemption_code: gc.formatted_redemption_code } }
       end

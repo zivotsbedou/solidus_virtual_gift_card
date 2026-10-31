@@ -6,9 +6,14 @@ class Spree::GiftCardMailer < Spree::BaseMailer
     @order = @gift_card.line_item.order
 
     store = @order.store
-    send_to_address = @gift_card.recipient_email.presence || @order.email
     subject = "#{store} #{I18n.t('spree.gift_card_mailer.gift_card_email.subject')}"
 
-    mail(to: send_to_address, from: from_address(store), subject: subject)
+    if SolidusVirtualGiftCard::Config.card_image
+      card = SolidusVirtualGiftCard::Config.card_image_class.new(@gift_card)
+      attachments.inline[card.filename] = { mime_type: 'image/png', content: card.to_png }
+      @card_image = attachments[card.filename]
+    end
+
+    mail(to: @gift_card.delivery_email, from: from_address(store), subject: subject)
   end
 end

@@ -31,6 +31,16 @@ module SolidusVirtualGiftCard
 
       private
 
+      # Open-amount gift cards cost what the customer chose; the card validates the range.
+      def add_to_line_item(variant, quantity, options = {})
+        line_item = super
+        if line_item.gift_card_open_amount?
+          amount = (options['gift_card_details'] || {})['amount'].to_s.tr(',', '.')
+          line_item.update!(price: BigDecimal(amount, exception: false) || 0)
+        end
+        line_item
+      end
+
       def create_gift_cards(line_item, quantity_diff, gift_card_details = {})
         if line_item.gift_card?
           quantity_diff.to_i.times do
@@ -42,6 +52,7 @@ module SolidusVirtualGiftCard
               recipient_email: gift_card_details['recipient_email'],
               purchaser_name: gift_card_details['purchaser_name'],
               gift_message: gift_card_details['gift_message'],
+              delivery: gift_card_details['delivery'].presence || 'recipient',
               send_email_at: format_date(gift_card_details['send_email_at'])
             )
           end
