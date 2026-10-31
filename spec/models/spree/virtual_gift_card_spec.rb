@@ -335,6 +335,10 @@ describe Spree::VirtualGiftCard do
     it 'inserts dashes into the code after every 4 characters' do
       expect(subject).to eq formatted_redemption_code
     end
+
+    it 'keeps a last group shorter than 4 characters' do
+      expect(build(:virtual_gift_card, redemption_code: 'AAAABBBBCC').formatted_redemption_code).to eq 'AAAA-BBBB-CC'
+    end
   end
 
   describe '#send_email' do

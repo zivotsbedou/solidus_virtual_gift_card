@@ -109,7 +109,7 @@ class Spree::VirtualGiftCard < Spree::Base
   end
 
   def formatted_redemption_code
-    redemption_code.present? ? redemption_code.scan(/.{4}/).join('-') : ''
+    redemption_code.present? ? redemption_code.scan(/.{1,4}/).join('-') : ''
   end
 
   def formatted_amount
