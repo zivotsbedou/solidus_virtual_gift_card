@@ -4,7 +4,7 @@ module Spree
   module Admin
     class GiftCardDesignsController < ResourceController
       # The design drawn with sample details, so staff see the finished card before customers do.
-      # Unsaved texts, colours and alignment from the edit form are drawn without saving them.
+      # Unsaved texts, colours, alignment and layout from the edit form are drawn without saving them.
       def preview
         @object.assign_attributes(preview_params)
         sample = Spree::VirtualGiftCard.new(
@@ -20,7 +20,7 @@ module Spree
       private
 
       def preview_params
-        params.fetch(:gift_card_design, {}).permit(:heading, :footer, :footer_align, :amount_color, :ink_color, :box_color)
+        params.fetch(:gift_card_design, {}).permit(:heading, :footer, :footer_align, :amount_color, :ink_color, :box_color, :layout)
               .to_h.reject { |key, value| key.end_with?('_color') && !value.match?(Spree::GiftCardDesign::COLOR) }
               .reject { |key, value| key == 'footer_align' && !value.in?(Spree::GiftCardDesign::ALIGNMENTS) }
       end
@@ -31,7 +31,7 @@ module Spree
 
       def permitted_resource_params
         params.require(:gift_card_design).permit(:name, :heading, :footer, :footer_align, :amount_color, :ink_color,
-                                                 :box_color, :active, :position, :background)
+                                                 :box_color, :active, :position, :background, :layout)
       end
 
       def location_after_save

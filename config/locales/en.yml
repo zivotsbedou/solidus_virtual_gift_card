@@ -9,6 +9,19 @@ en:
         explanation: Customers choose an active design when they buy a gift card. The card's amount, code, QR code, recipient and message are drawn on its background.
         preview: Preview
         preview_hint: The preview follows the texts, colours and alignment as you change them. Save to see a new background.
+        layout_hint: Drag a frame to move its field. Drag its corner sideways for the text width, up or down for the text or QR code size. Save to keep the layout.
+        reset_layout: Use the default layout
+        fields:
+          amount: Amount
+          qr: QR code
+          code_label: Code label
+          code: Code
+          note: Note
+          heading: Heading
+          recipient_name: Recipient
+          purchaser_name: Sender
+          gift_message: Message
+          footer: Footer
         background_hint: "PNG or JPEG artwork without the texts the card adds, 1748 × 1240 px (A6 landscape at 300 dpi)."
         footer_hint: "Wrap words in <b>…</b> to make them bold."
         position_hint: Lower numbers come first in the shop.
@@ -157,4 +170,5 @@ en:
         ink_color: Text colour
         box_color: Text colour in the box
         active: Offered to customers
+        layout: Layout
         position: Order

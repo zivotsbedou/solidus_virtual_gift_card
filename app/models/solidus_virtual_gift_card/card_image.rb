@@ -19,7 +19,8 @@ module SolidusVirtualGiftCard
     def to_png
       require 'vips'
 
-      canvas = @config.card_image_layout.reduce(background) do |image, (field, style)|
+      layout = @design ? @design.card_layout(@config.card_image_layout) : @config.card_image_layout
+      canvas = layout.reduce(background) do |image, (field, style)|
         field.to_sym == :qr ? draw_qr(image, style) : draw_field(image, field, style)
       end
       canvas.write_to_buffer('.png')
