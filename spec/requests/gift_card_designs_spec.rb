@@ -39,7 +39,7 @@ describe 'Gift card design administration', type: :request do
   it 'previews unsaved texts and colours without saving them' do
     design = Spree::GiftCardDesign.create!(name: 'Champagne', heading: 'Saved')
 
-    get "/admin/gift_card_designs/#{design.id}/preview", params: { gift_card_design: { heading: 'Draft', ink_color: '#ae9ac6', box_color: 'red', footer_align: 'top' } }
+    get "/admin/gift_card_designs/#{design.id}/preview", params: { gift_card_design: { heading: 'Draft', ink_color: '#ae9ac6', box_color: 'red', footer_align: 'top', layout: '{"heading":{"y":0.1}}' } }
 
     expect(response.media_type).to eq('image/png')
     expect(design.reload.heading).to eq('Saved')
