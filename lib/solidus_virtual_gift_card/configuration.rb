@@ -28,6 +28,9 @@ module SolidusVirtualGiftCard
     # Card size when the gift card product has no image to draw on.
     attr_writer :card_image_size, :card_image_background, :card_image_layout
 
+    # URL the card's QR code opens, given the gift card; nil leaves out the QR code.
+    attr_accessor :card_qr_url
+
     def card_image_size
       @card_image_size ||= [1748, 1240]
     end

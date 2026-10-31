@@ -91,6 +91,22 @@ a field may set `font` and `fontfile`. Field text comes from the
 `solidus_virtual_gift_card.card_image.*` translations. It needs libvips and the
 `ruby-vips` gem. Swap the renderer with `card_image_class`.
 
+## Card designs
+
+Staff manage designs under **Gift cards → Card designs** in the admin: a background
+image, the heading and footer texts, three colours (amount, text, text in the box) and
+whether customers are offered it. The edit page shows the finished card. Storefronts
+pass `gift_card_details[design_id]`; inactive designs are refused for new cards.
+
+Layout fields may use a design colour role (`color: :amount`, `:ink` or `:box`) and
+`align: :design` (the design's footer alignment). The `:heading` and `:footer` fields
+draw the design's texts, and a `:qr` field (`x`, `y`, `size`) draws a QR code for
+`Config.card_qr_url`, a callable given the gift card:
+
+```ruby
+SolidusVirtualGiftCard::Config.card_qr_url = ->(card) { "https://shop.example/redeem/#{card.redemption_code}" }
+```
+
 ## Delivery
 
 `gift_card_details[delivery]` is `recipient` (default: the recipient email, or the

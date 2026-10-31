@@ -2,6 +2,23 @@
 en:
   spree:
     admin:
+      gift_card_designs:
+        title: Card designs
+        new: New card design
+        none: No card designs yet. Customers get a plain card.
+        explanation: Customers choose an active design when they buy a gift card. The card's amount, code, QR code, recipient and message are drawn on its background.
+        preview: Preview
+        background_hint: "PNG or JPEG artwork without the texts the card adds, 1748 × 1240 px (A6 landscape at 300 dpi)."
+        footer_hint: "Wrap words in <b>…</b> to make them bold."
+        position_hint: Lower numbers come first in the shop.
+        active_hint: Only active designs are offered; seasonal designs can be switched off.
+        alignments:
+          low: Left
+          centre: Centred
+        sample:
+          recipient_name: Anna
+          purchaser_name: Mike
+          gift_message: Happy birthday! Enjoy something nice from the shop.
       gift_cards:
         codes: Gift Card Codes
         applicable_total: Gift Cards Amount
@@ -123,3 +140,20 @@ en:
       recipient_name: "For %{value}"
       purchaser_name: "From %{value}"
       gift_message: "%{value}"
+  activerecord:
+    models:
+      spree/gift_card_design:
+        one: Card design
+        other: Card designs
+    attributes:
+      spree/gift_card_design:
+        name: Name
+        background: Background
+        heading: Heading
+        footer: Footer
+        footer_align: Footer alignment
+        amount_color: Amount colour
+        ink_color: Text colour
+        box_color: Text colour in the box
+        active: Offered to customers
+        position: Order

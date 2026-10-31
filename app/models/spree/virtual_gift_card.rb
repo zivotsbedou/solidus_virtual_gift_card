@@ -20,6 +20,7 @@ class Spree::VirtualGiftCard < Spree::Base
   belongs_to :line_item, class_name: 'Spree::LineItem', optional: true
   belongs_to :inventory_unit, class_name: 'Spree::InventoryUnit', optional: true
   belongs_to :created_by, class_name: Spree::UserClassHandle.new, optional: true
+  belongs_to :design, class_name: 'Spree::GiftCardDesign', optional: true, inverse_of: :virtual_gift_cards
   has_one :order, through: :line_item
   has_many :events, class_name: 'Spree::VirtualGiftCardEvent', dependent: :destroy
 
@@ -29,6 +30,7 @@ class Spree::VirtualGiftCard < Spree::Base
   DELIVERIES = %w[recipient purchaser].freeze
   validates :delivery, inclusion: { in: DELIVERIES }
   validate :open_amount_within_range, on: :create, if: -> { line_item&.gift_card_open_amount? }
+  validate :design_available, on: :create, if: :design_id
 
   scope :unredeemed, -> { where(redeemed_at: nil) }
   scope :by_redemption_code, ->(redemption_code) { where(redemption_code: redemption_code) }
@@ -94,6 +96,7 @@ class Spree::VirtualGiftCard < Spree::Base
       purchaser_name: purchaser_name,
       gift_message: gift_message,
       delivery: delivery,
+      design_id: design_id.to_s,
       send_email_at: send_email_at,
       formatted_send_email_at: formatted_send_email_at
     }
@@ -297,6 +300,10 @@ class Spree::VirtualGiftCard < Spree::Base
   end
 
   private
+
+  def design_available
+    errors.add(:design, :inclusion) unless design&.active?
+  end
 
   def open_amount_within_range
     range = SolidusVirtualGiftCard::Config.open_amount_range
