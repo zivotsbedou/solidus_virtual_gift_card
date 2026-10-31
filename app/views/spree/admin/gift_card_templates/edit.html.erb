@@ -122,14 +122,18 @@
         moved = true
         const dx = (pointer.clientX - start.px) / rect.width
         const dy = (pointer.clientY - start.py) / rect.height
+        // Keep the whole box on the card.
+        const qr = 'qr' in box.dataset
+        const width = qr ? box.dataset.size * ratio() : +box.dataset.width
+        const height = qr ? +box.dataset.size : +box.dataset.height
         if (!resize) {
-          box.dataset.x = round(start.x + dx)
-          box.dataset.y = round(start.y + dy)
-        } else if ('qr' in box.dataset) {
-          box.dataset.size = round(start.size + dy, 0.02)
+          box.dataset.x = Math.min(round(start.x + dx), round(1 - width))
+          box.dataset.y = Math.min(round(start.y + dy), round(1 - height))
+        } else if (qr) {
+          box.dataset.size = Math.min(round(start.size + dy, 0.02), round(1 - start.y), round((1 - start.x) / ratio()))
         } else {
-          box.dataset.width = round(start.width + dx, 0.02)
-          box.dataset.height = round(start.height + dy, 0.01)
+          box.dataset.width = Math.min(round(start.width + dx, 0.02), round(1 - start.x))
+          box.dataset.height = Math.min(round(start.height + dy, 0.01), round(1 - start.y))
         }
         place(box)
       }
