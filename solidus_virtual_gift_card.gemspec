@@ -34,5 +34,6 @@ Gem::Specification.new do |spec|
   spec.add_dependency 'solidus_support', '>= 0.14.1', '< 1'
 
   spec.add_development_dependency 'pry'
+  spec.add_development_dependency 'ruby-vips', '~> 2.2'
   spec.add_development_dependency 'solidus_dev_support', '~> 2.11'
 end

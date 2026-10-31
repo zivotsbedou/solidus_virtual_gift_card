@@ -53,6 +53,40 @@ reservations through their matching Solidus payment.
 Account store-credit redemption remains available. It locks the card and refuses
 conversion while payment reservations are outstanding.
 
+## Customer-chosen amounts
+
+Check **Customer chooses the amount** on a gift card product. The storefront then sends
+`gift_card_details[amount]` with the cart line; the line item costs that amount, each
+card is worth it, and Solidus price recalculation leaves it alone. Set the allowed range
+(either end may be `nil`):
+
+```ruby
+SolidusVirtualGiftCard::Config.open_amount_range = 100..10_000
+```
+
+An amount outside the range raises `ActiveRecord::RecordInvalid` and adds nothing.
+
+## Card images
+
+```ruby
+SolidusVirtualGiftCard::Config.card_image = true
+```
+
+Each card is then drawn as a PNG, attached inline to its email, and downloadable at
+`/gift_cards/:id/card?token=<order guest token>` once paid. `CardImage` draws the
+amount, code, names and message onto the gift card product's image (the variant's
+first image, else the product's), or onto a plain card of `card_image_size`.
+`card_image_layout` places each field as fractions of the card's width and height;
+a field may set `font` and `fontfile`. Field text comes from the
+`solidus_virtual_gift_card.card_image.*` translations. It needs libvips and the
+`ruby-vips` gem. Swap the renderer with `card_image_class`.
+
+## Delivery
+
+`gift_card_details[delivery]` is `recipient` (default: the recipient email, or the
+buyer when it is blank) or `purchaser`, which sends the card to the buyer to print
+and hand over.
+
 ## Development
 
 ```sh

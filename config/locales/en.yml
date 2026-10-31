@@ -8,6 +8,8 @@ en:
         add_code: Add Gift Card Code
         remove_code: Remove
         convert_product_label: "Turn this product into a gift card?"
+        open_amount: "Customer chooses the amount"
+        open_amount_label: "The buyer enters the card value; the product price is ignored."
         deactivated_gift_card: "Gift card deactivated"
         editing_gift_card: "Editing Gift Card"
         gift_card: "Gift Card"
@@ -113,3 +115,11 @@ en:
       user_has_no_gift cards: User does not have any available gift cards
       errors:
         unable_to_fund: Unable to pay for order using gift card
+  solidus_virtual_gift_card:
+    card_image:
+      filename: gift-card
+      amount: "%{value}"
+      code: "%{value}"
+      recipient_name: "For %{value}"
+      purchaser_name: "From %{value}"
+      gift_message: "%{value}"

@@ -26,6 +26,9 @@ class Spree::VirtualGiftCard < Spree::Base
   validates :amount, numericality: { greater_than: 0 }
   validates :redemption_code, uniqueness: { conditions: -> { where(redeemed_at: nil, redeemable: true) } }
   validates :recipient_email, format: { with: URI::MailTo::EMAIL_REGEXP }, allow_blank: true
+  DELIVERIES = %w[recipient purchaser].freeze
+  validates :delivery, inclusion: { in: DELIVERIES }
+  validate :open_amount_within_range, on: :create, if: -> { line_item&.gift_card_open_amount? }
 
   scope :unredeemed, -> { where(redeemed_at: nil) }
   scope :by_redemption_code, ->(redemption_code) { where(redemption_code: redemption_code) }
@@ -90,9 +93,19 @@ class Spree::VirtualGiftCard < Spree::Base
       recipient_name: recipient_name,
       purchaser_name: purchaser_name,
       gift_message: gift_message,
+      delivery: delivery,
       send_email_at: send_email_at,
       formatted_send_email_at: formatted_send_email_at
     }
+  end
+
+  # The buyer receives the card to print and hand over in person.
+  def purchaser_delivery?
+    delivery == 'purchaser'
+  end
+
+  def delivery_email
+    purchaser_delivery? ? order.email : recipient_email.presence || order.email
   end
 
   def formatted_redemption_code
@@ -284,6 +297,12 @@ class Spree::VirtualGiftCard < Spree::Base
   end
 
   private
+
+  def open_amount_within_range
+    range = SolidusVirtualGiftCard::Config.open_amount_range
+    errors.add(:amount, :greater_than_or_equal_to, count: range.begin) if range.begin && amount.to_d < range.begin
+    errors.add(:amount, :less_than_or_equal_to, count: range.end) if range.end && amount.to_d > range.end
+  end
 
   def create_credit_record(amount, action_attributes = {})
     # Setting credit_to_new_allocation to true will create a new allocation anytime #credit is called

@@ -10,5 +10,40 @@ module SolidusVirtualGiftCard
 
     preference :authorize_timeout, :time, default: 1.month
     class_name_attribute :schedule_job_class, default: 'SolidusVirtualGiftCard::VoidExpiredAuthorizedEventsJob'
+
+    # Amounts customers may choose for open-amount gift card products; either end may be nil.
+    attr_writer :open_amount_range
+
+    def open_amount_range
+      @open_amount_range ||= 1..
+    end
+
+    # Render each card as an image, attach it to the gift card email and offer it for download.
+    # The default renderer needs libvips and the ruby-vips gem.
+    preference :card_image, :boolean, default: false
+    class_name_attribute :card_image_class, default: 'SolidusVirtualGiftCard::CardImage'
+
+    # Card size when the gift card product has no image to draw on.
+    attr_writer :card_image_size, :card_image_background, :card_image_layout
+
+    def card_image_size
+      @card_image_size ||= [1748, 1240]
+    end
+
+    def card_image_background
+      @card_image_background ||= [255, 255, 255]
+    end
+
+    # Where each field is drawn, as fractions of the card's width and height.
+    # Each field's text comes from the solidus_virtual_gift_card.card_image.<field> translation.
+    def card_image_layout
+      @card_image_layout ||= {
+        amount: { x: 0.08, y: 0.12, width: 0.84, size: 0.12, color: [33, 33, 33], font: 'sans bold' },
+        code: { x: 0.08, y: 0.36, width: 0.84, size: 0.055, color: [33, 33, 33], font: 'monospace bold' },
+        recipient_name: { x: 0.08, y: 0.52, width: 0.84, size: 0.05, color: [33, 33, 33], font: 'sans' },
+        gift_message: { x: 0.08, y: 0.62, width: 0.84, size: 0.04, color: [33, 33, 33], font: 'sans' },
+        purchaser_name: { x: 0.08, y: 0.86, width: 0.84, size: 0.04, color: [33, 33, 33], font: 'sans' }
+      }
+    end
   end
 end

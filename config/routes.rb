@@ -28,6 +28,8 @@ Spree::Core::Engine.routes.draw do
     end
   end
 
+  get '/gift_cards/:id/card', to: 'gift_card_images#show', as: :gift_card_image
+
   concern :order_routes do
     resources :line_items
     resources :payments do

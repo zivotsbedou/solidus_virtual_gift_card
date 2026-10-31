@@ -1,5 +1,12 @@
 # Changelog
 
+## Unreleased
+
+- Customer-chosen amounts for gift card products, within a configured range.
+- Optional card images drawn with libvips, attached to the email and downloadable
+  by the buyer with the order token.
+- Deliver a card to the recipient or to the buyer to print.
+
 ## 2.0.0
 
 - Support Solidus 4.8, Rails 8.1, Ruby 4 and SQLite.
