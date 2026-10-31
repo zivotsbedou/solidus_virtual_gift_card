@@ -36,7 +36,8 @@ describe SolidusVirtualGiftCard::CardImage do
     let(:layout) do
       { amount: { x: 0.1, y: 0.1, width: 0.8, size: 0.2, color: :amount },
         heading: { x: 0.5, y: 0.4, width: 0.8, size: 0.1, color: :ink, align: :centre },
-        footer: { x: 0.1, y: 0.8, width: 0.8, size: 0.05, color: :ink, align: :design },
+        footer: { x: 0.1, x_by_align: { centre: 0.5 }, y: 0.8, width: 0.8, size: 0.05, color: :ink, align: :design },
+        note: { x: 0.1, y: 0.55, width: 0.5, size: 0.04, color: :ink, text: 'solidus_virtual_gift_card.card_image.filename' },
         qr: { x: 0.7, y: 0.6, size: 0.3 } }
     end
 

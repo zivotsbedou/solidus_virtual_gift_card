@@ -5,7 +5,8 @@ module SolidusVirtualGiftCard
   #
   # Each card_image_layout field is a text field, or :qr for the redemption QR code. A field's
   # color may be a design role (:amount, :ink or :box); its align may be :design to follow the
-  # design's footer alignment.
+  # design's footer alignment, with x_by_align giving x per alignment. A field with text: draws
+  # that translation as is.
   class CardImage
     DEFAULT_INK = [33, 33, 33].freeze
 
@@ -42,7 +43,7 @@ module SolidusVirtualGiftCard
     end
 
     def draw_field(image, field, style)
-      markup = markup_for(field.to_sym)
+      markup = style[:text] ? ERB::Util.html_escape(I18n.t(style[:text])) : markup_for(field.to_sym)
       markup.blank? ? image : draw(image, markup, style)
     end
 
@@ -73,7 +74,7 @@ module SolidusVirtualGiftCard
         dpi: 72,
         wrap: :word
       )
-      x = (style.fetch(:x) * image.width).round
+      x = ((style.dig(:x_by_align, align) || style.fetch(:x)) * image.width).round
       x -= mask.width / 2 if align == :centre
       ink = mask.new_from_image(color(style.fetch(:color, :ink))).copy(interpretation: :srgb).bandjoin(mask)
       opaque(image.bandjoin(255).composite2(ink, :over, x: x, y: (style.fetch(:y) * image.height).round))
