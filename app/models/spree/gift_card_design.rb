@@ -28,7 +28,7 @@ class Spree::GiftCardDesign < Spree::Base
   # The layout editor submits JSON; a blank value goes back to the configured layout.
   def layout=(value)
     value = value.presence && JSON.parse(value) if value.is_a?(String)
-    super
+    super(value.is_a?(Hash) ? value.deep_stringify_keys : value)
   rescue JSON::ParserError
     @invalid_layout = true
   end

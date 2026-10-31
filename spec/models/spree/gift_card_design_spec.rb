@@ -48,6 +48,13 @@ describe Spree::GiftCardDesign do
       expect(design.card_layout(base)[:code]).to eq(x: 0.6, y: 0.2, width: 0.5, size: 0.08, align: :centre, font: 'sans bold', color: '#ae9ac6')
     end
 
+    it 'takes a layout with symbol keys' do
+      design = described_class.new(name: 'Seeded', layout: { code: { color: '#ffffff' } })
+
+      expect(design).to be_valid
+      expect(design.card_layout(base)[:code]).to include(color: '#ffffff')
+    end
+
     it 'goes back to the configured layout when cleared' do
       expect(described_class.new(layout: '').layout).to be_nil
     end
