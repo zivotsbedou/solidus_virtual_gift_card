@@ -9,6 +9,8 @@ module SolidusVirtualGiftCard
     preference :credit_to_new_gift_card, :boolean, default: false
 
     preference :authorize_timeout, :time, default: 1.month
+    # Codes are printed on cards; shorter is easier to type. Rate-limit redemption when lowering it.
+    preference :redemption_code_length, :integer, default: 24
     class_name_attribute :schedule_job_class, default: 'SolidusVirtualGiftCard::VoidExpiredAuthorizedEventsJob'
 
     # Amounts customers may choose for open-amount gift card products; either end may be nil.

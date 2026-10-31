@@ -6,13 +6,22 @@ describe Spree::RedemptionCodeGenerator do
   describe '#generate_redemption_code' do
     subject { described_class.generate_redemption_code }
 
-    it 'generates a 24 character alpha-numeric code' do
-      code = subject
-      expect(code.match('^[a-zA-Z0-9]{24}')[0]).to eq code
+    it 'generates a 24 character code from unambiguous characters by default' do
+      expect(subject).to match(/\A[2-9A-HJKMNP-TV-Z]{24}\z/)
+    end
+
+    it 'generates codes of the configured length' do
+      stub_spree_preferences(SolidusVirtualGiftCard::Config, redemption_code_length: 8)
+
+      expect(subject).to match(/\A[2-9A-HJKMNP-TV-Z]{8}\z/)
     end
   end
 
   describe '#format_redemption_code_for_lookup' do
+    it 'ignores spaces and other separators typed by people' do
+      expect(described_class.format_redemption_code_for_lookup(' k7m2 pq9x ')).to eq 'K7M2PQ9X'
+    end
+
     subject { described_class.format_redemption_code_for_lookup(redemption_code) }
 
     context 'redemption code has no dashes' do

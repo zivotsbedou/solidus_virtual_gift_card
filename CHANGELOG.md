@@ -2,6 +2,8 @@
 
 ## Unreleased
 
+- Configurable redemption code length; codes avoid look-alike characters and
+  ignore case, spaces and dashes when typed.
 - Customer-chosen amounts for gift card products, within a configured range.
 - Optional card images drawn with libvips, attached to the email and downloadable
   by the buyer with the order token.

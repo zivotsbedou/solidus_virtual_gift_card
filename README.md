@@ -53,6 +53,16 @@ reservations through their matching Solidus payment.
 Account store-credit redemption remains available. It locks the card and refuses
 conversion while payment reservations are outstanding.
 
+## Redemption codes
+
+Codes use 30 characters that are hard to confuse (no 0/O, 1/I/L or U) and accept
+any case, spaces and dashes when typed. The default length is 24. Printed cards
+are easier with a short code; rate-limit redemption when you lower it:
+
+```ruby
+SolidusVirtualGiftCard::Config.redemption_code_length = 8 # about 6.6 × 10^11 codes
+```
+
 ## Customer-chosen amounts
 
 Check **Customer chooses the amount** on a gift card product. The storefront then sends
