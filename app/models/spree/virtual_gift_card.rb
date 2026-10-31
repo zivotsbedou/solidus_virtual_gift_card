@@ -300,8 +300,14 @@ class Spree::VirtualGiftCard < Spree::Base
 
   def open_amount_within_range
     range = SolidusVirtualGiftCard::Config.open_amount_range
-    errors.add(:amount, :greater_than_or_equal_to, count: range.begin) if range.begin && amount.to_d < range.begin
-    errors.add(:amount, :less_than_or_equal_to, count: range.end) if range.end && amount.to_d > range.end
+    value = amount.to_d
+    return if range.cover?(value)
+
+    if range.begin && value < range.begin
+      errors.add(:amount, :greater_than_or_equal_to, count: range.begin)
+    else
+      errors.add(:amount, range.exclude_end? ? :less_than : :less_than_or_equal_to, count: range.end)
+    end
   end
 
   def create_credit_record(amount, action_attributes = {})

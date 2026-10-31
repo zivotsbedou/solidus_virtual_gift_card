@@ -30,10 +30,11 @@ Gem::Specification.new do |spec|
   spec.require_paths = ["lib"]
 
   spec.add_dependency 'deface'
+  # CardImage loads it only when card images are enabled; it also needs libvips installed.
+  spec.add_dependency 'ruby-vips', '~> 2.2'
   spec.add_dependency 'solidus_core', ['>= 4.8', '< 5']
   spec.add_dependency 'solidus_support', '>= 0.14.1', '< 1'
 
   spec.add_development_dependency 'pry'
-  spec.add_development_dependency 'ruby-vips', '~> 2.2'
   spec.add_development_dependency 'solidus_dev_support', '~> 2.11'
 end

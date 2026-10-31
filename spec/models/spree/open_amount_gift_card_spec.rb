@@ -42,6 +42,13 @@ describe 'Open-amount gift cards' do
     end
   end
 
+  it 'excludes the end of an exclusive range' do
+    allow(SolidusVirtualGiftCard::Config).to receive(:open_amount_range).and_return(100...10_000)
+
+    expect { contents.add(variant, 1, 'gift_card_details' => { 'amount' => '10000' }) }
+      .to raise_error(ActiveRecord::RecordInvalid, /less than 10000/)
+  end
+
   it 'ignores a submitted amount for fixed-price gift cards' do
     variant.product.update!(gift_card_open_amount: false)
 
