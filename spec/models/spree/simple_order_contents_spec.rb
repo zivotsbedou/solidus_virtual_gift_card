@@ -3,6 +3,8 @@
 require 'spec_helper'
 
 describe 'Spree::SimpleOrderContents' do
+  include ActiveSupport::Testing::TimeHelpers
+
   let(:described_class) do
     if Object.const_defined?('Spree::SimpleOrderContents')
       Spree::SimpleOrderContents
@@ -64,7 +66,20 @@ describe 'Spree::SimpleOrderContents' do
             it 'sets to current date' do
               subject
               gift_card = Spree::VirtualGiftCard.last
-              expect(gift_card.send_email_at).to eq(Date.today)
+              expect(gift_card.send_email_at).to eq(Date.current)
+            end
+
+            it 'uses the application time zone' do
+              system_tz = ENV['TZ']
+              ENV['TZ'] = 'UTC'
+              Time.use_zone('Pacific/Kiritimati') do
+                travel_to Time.utc(2026, 1, 1, 12) do
+                  subject
+                  expect(Spree::VirtualGiftCard.last.send_email_at).to eq(Date.new(2026, 1, 2))
+                end
+              end
+            ensure
+              ENV['TZ'] = system_tz
             end
           end
 
