@@ -2,13 +2,6 @@
 en:
   spree:
     admin:
-      gift_cards:
-        codes: Gift Card Codes
-        applicable_total: Gift Cards Amount
-        add_code: Add Gift Card Code
-        remove_code: Remove
-        convert_product_label: "Turn this product into a gift card?"
-        open_amount: "Customer chooses the amount"
       gift_card_designs:
         title: Card designs
         new: New card design
@@ -26,6 +19,13 @@ en:
           recipient_name: Anna
           purchaser_name: Mike
           gift_message: Happy birthday! Enjoy something nice from the shop.
+      gift_cards:
+        codes: Gift Card Codes
+        applicable_total: Gift Cards Amount
+        add_code: Add Gift Card Code
+        remove_code: Remove
+        convert_product_label: "Turn this product into a gift card?"
+        open_amount: "Customer chooses the amount"
         open_amount_label: "The buyer enters the card value; the product price is ignored."
         deactivated_gift_card: "Gift card deactivated"
         editing_gift_card: "Editing Gift Card"

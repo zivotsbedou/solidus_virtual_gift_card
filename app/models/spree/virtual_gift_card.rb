@@ -30,7 +30,7 @@ class Spree::VirtualGiftCard < Spree::Base
   DELIVERIES = %w[recipient purchaser].freeze
   validates :delivery, inclusion: { in: DELIVERIES }
   validate :open_amount_within_range, on: :create, if: -> { line_item&.gift_card_open_amount? }
-  validate :design_available, on: :create, if: :design
+  validate :design_available, on: :create, if: :design_id
 
   scope :unredeemed, -> { where(redeemed_at: nil) }
   scope :by_redemption_code, ->(redemption_code) { where(redemption_code: redemption_code) }
@@ -96,7 +96,7 @@ class Spree::VirtualGiftCard < Spree::Base
       purchaser_name: purchaser_name,
       gift_message: gift_message,
       delivery: delivery,
-      design_id: design_id,
+      design_id: design_id.to_s,
       send_email_at: send_email_at,
       formatted_send_email_at: formatted_send_email_at
     }
@@ -302,7 +302,7 @@ class Spree::VirtualGiftCard < Spree::Base
   private
 
   def design_available
-    errors.add(:design, :inclusion) unless design.active?
+    errors.add(:design, :inclusion) unless design&.active?
   end
 
   def open_amount_within_range

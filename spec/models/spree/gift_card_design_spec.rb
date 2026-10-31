@@ -32,4 +32,19 @@ describe Spree::GiftCardDesign do
 
     expect(build(:virtual_gift_card, design: design)).not_to be_valid
   end
+
+  it 'refuses unknown designs for new cards' do
+    expect(build(:virtual_gift_card, design_id: 0)).not_to be_valid
+  end
+
+  it 'requires a non-negative position' do
+    expect(described_class.new(name: 'Blank', position: nil)).not_to be_valid
+    expect(described_class.new(name: 'Negative', position: -1)).not_to be_valid
+  end
+
+  it 'gives the design ID in details as submitted from a form' do
+    design = described_class.create!(name: 'Merch')
+
+    expect(build(:virtual_gift_card, design: design).details[:design_id]).to eq(design.id.to_s)
+  end
 end

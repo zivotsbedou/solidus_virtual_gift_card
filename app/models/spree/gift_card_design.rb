@@ -13,6 +13,7 @@ class Spree::GiftCardDesign < Spree::Base
   validates :name, presence: true
   validates :amount_color, :ink_color, :box_color, format: { with: COLOR }
   validates :footer_align, inclusion: { in: ALIGNMENTS }
+  validates :position, numericality: { only_integer: true, greater_than_or_equal_to: 0 }
   validate :background_is_image, if: -> { background.attached? }
 
   scope :active, -> { where(active: true) }
