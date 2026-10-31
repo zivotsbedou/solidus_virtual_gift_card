@@ -1,0 +1,153 @@
+<% admin_breadcrumb(link_to(t('spree.admin.gift_card_layouts.title'), spree.admin_gift_card_layouts_path)) %>
+<% admin_breadcrumb(@variant.descriptive_name) %>
+
+<% content_for :page_actions do %>
+  <ul class="actions inline-menu">
+    <li><%= link_to t('spree.admin.gift_card_layouts.edit_variant'), spree.edit_admin_product_variant_path(@variant.product, @variant), class: 'btn btn-default' unless @variant.is_master? %></li>
+  </ul>
+<% end %>
+
+<fieldset>
+  <legend><%= t('spree.admin.gift_card_layouts.preview') %></legend>
+  <div id="gift_card_layout_canvas" style="position: relative; display: inline-block; max-width: 100%; user-select: none;">
+    <%= image_tag preview_admin_gift_card_layout_path(@variant, v: @variant.updated_at.to_i), id: 'gift_card_layout_preview', alt: t('spree.admin.gift_card_layouts.preview'), draggable: false, style: 'display: block; max-width: 100%; height: auto;' %>
+    <% hex = ->(value) { value.is_a?(Array) ? format('#%02x%02x%02x', *value) : value } %>
+    <% @variant.card_layout.each do |field, style| %>
+      <div data-field="<%= field %>" data-name="<%= t(field, scope: 'spree.admin.gift_card_layouts.fields', default: field.to_s.humanize) %>"
+           data-x="<%= style[:x] %>" data-y="<%= style[:y] %>" data-width="<%= style[:width] %>" data-size="<%= style[:size] %>"
+           data-height="<%= style[:height] || (style[:size] * 1.25).round(4) %>" <%= 'data-qr' if field.to_sym == :qr %>
+           data-font="<%= style[:font] %>" data-color="<%= hex.(style.fetch(:color, field.to_sym == :qr ? [45, 49, 66] : [33, 33, 33])) %>"
+           data-background="<%= hex.(style.fetch(:background, [255, 255, 255])) %>"
+           style="position: absolute; box-sizing: border-box; border: 1px dashed #e11d48; background: rgba(225, 29, 72, 0.08); cursor: move; touch-action: none;">
+        <span style="position: absolute; left: 0; bottom: 100%; padding: 0 3px; font-size: 10px; line-height: 14px; white-space: nowrap; color: #fff; background: #e11d48;"><%= t(field, scope: 'spree.admin.gift_card_layouts.fields', default: field.to_s.humanize) %></span>
+        <span data-handle style="position: absolute; right: -6px; bottom: -6px; width: 12px; height: 12px; background: #e11d48; cursor: nwse-resize;"></span>
+      </div>
+    <% end %>
+  </div>
+  <p id="gift_card_layout_field" hidden>
+    <strong data-name></strong>
+    <label data-text><%= t('spree.admin.gift_card_layouts.font') %>
+      <select data-key="font"><% SolidusVirtualGiftCard::Config.card_image_fonts.each do |font| %><option><%= font %></option><% end %></select></label>
+    <label data-text><%= t('spree.admin.gift_card_layouts.font_size') %>
+      <input type="number" data-key="points" min="4" max="200" step="0.5" style="width: 5em;"></label>
+    <label><%= t('spree.admin.gift_card_layouts.font_color') %> <input type="color" data-key="color"></label>
+    <label data-qr><%= t('spree.admin.gift_card_layouts.qr_background') %> <input type="color" data-key="background"></label>
+  </p>
+  <p><button type="button" id="gift_card_layout_reset_layout" class="btn btn-default"><%= t('spree.admin.gift_card_layouts.reset_layout') %></button></p>
+</fieldset>
+<%= form_for @variant, url: admin_gift_card_layout_path(@variant), method: :patch, html: { id: 'gift_card_layout_form' } do |f| %>
+  <%= f.hidden_field :gift_card_layout, value: @variant.gift_card_layout&.to_json %>
+  <div class="form-buttons filter-actions actions">
+    <%= f.button t('spree.actions.update'), class: 'btn btn-primary' %>
+  </div>
+<% end %>
+
+<script>
+  (() => {
+    const form = document.getElementById('gift_card_layout_form')
+    const preview = document.getElementById('gift_card_layout_preview')
+    const canvas = document.getElementById('gift_card_layout_canvas')
+    const panel = document.getElementById('gift_card_layout_field')
+    const layoutField = form.elements['variant[gift_card_layout]']
+    const layout = JSON.parse(layoutField.value || '{}')
+    const pointsPerHeight = 105 / 25.4 * 72 // sizes are fractions of the A6 card's 105 mm height
+    let timer
+    let selected
+
+    // Redraw the preview from the unsaved form.
+    const refresh = () => {
+      const params = new URLSearchParams({ 'variant[gift_card_layout]': layoutField.value })
+      preview.src = `<%= preview_admin_gift_card_layout_path(@variant) %>?${params}`
+    }
+
+    // A frame is the field's box, in fractions of the card: x and width of its width, y and height of its height.
+    // The QR code is square, sized by its size.
+    const ratio = () => (preview.naturalHeight / preview.naturalWidth) || (1240 / 1748)
+    const place = (box) => {
+      const qr = 'qr' in box.dataset
+      const { x, y, size, width, height } = box.dataset
+      Object.assign(box.style, {
+        left: `${x * 100}%`, top: `${y * 100}%`,
+        width: `${(qr ? size * ratio() : width) * 100}%`, height: `${(qr ? size : height) * 100}%`
+      })
+    }
+    const boxes = canvas.querySelectorAll('[data-field]')
+    boxes.forEach(place)
+    preview.addEventListener('load', () => boxes.forEach(place), { once: true })
+
+    const save = (box) => {
+      const { x, y, width, height, size, font, color, background } = box.dataset
+      const entry = 'qr' in box.dataset
+        ? { x: +x, y: +y, size: +size, color, background }
+        : { x: +x, y: +y, width: +width, height: +height, size: +size, font, color }
+      if (!font) delete entry.font
+      layout[box.dataset.field] = entry
+      layoutField.value = JSON.stringify(layout)
+      refresh()
+    }
+
+    const select = (box) => {
+      boxes.forEach((other) => { other.style.borderStyle = other === box ? 'solid' : 'dashed' })
+      selected = box
+      const qr = 'qr' in box.dataset
+      panel.hidden = false
+      panel.querySelector('[data-name]').textContent = box.dataset.name
+      panel.querySelectorAll('[data-text]').forEach((label) => { label.hidden = qr })
+      panel.querySelector('label[data-qr]').hidden = !qr
+      panel.querySelector('[data-key=font]').value = box.dataset.font
+      panel.querySelector('[data-key=points]').value = Math.round(box.dataset.size * pointsPerHeight * 2) / 2
+      panel.querySelector('[data-key=color]').value = box.dataset.color
+      panel.querySelector('[data-key=background]').value = box.dataset.background
+    }
+
+    panel.addEventListener('input', (event) => {
+      const { key } = event.target.dataset
+      if (key === 'points') {
+        if (!(event.target.value > 0)) return
+        selected.dataset.size = Math.round(event.target.value / pointsPerHeight * 10000) / 10000
+      } else {
+        selected.dataset[key] = event.target.value
+      }
+      clearTimeout(timer)
+      timer = setTimeout(() => save(selected), 400)
+    })
+
+    const round = (value, min = 0) => Math.min(1, Math.max(min, Math.round(value * 1000) / 1000))
+    canvas.addEventListener('pointerdown', (event) => {
+      const box = event.target.closest('[data-field]')
+      if (!box) return
+      event.preventDefault()
+      select(box)
+      const resize = 'handle' in event.target.dataset
+      const rect = canvas.getBoundingClientRect()
+      const start = { px: event.clientX, py: event.clientY, x: +box.dataset.x, y: +box.dataset.y, width: +box.dataset.width, height: +box.dataset.height, size: +box.dataset.size }
+      let moved = false
+      const move = (pointer) => {
+        moved = true
+        const dx = (pointer.clientX - start.px) / rect.width
+        const dy = (pointer.clientY - start.py) / rect.height
+        if (!resize) {
+          box.dataset.x = round(start.x + dx)
+          box.dataset.y = round(start.y + dy)
+        } else if ('qr' in box.dataset) {
+          box.dataset.size = round(start.size + dy, 0.02)
+        } else {
+          box.dataset.width = round(start.width + dx, 0.02)
+          box.dataset.height = round(start.height + dy, 0.01)
+        }
+        place(box)
+      }
+      window.addEventListener('pointermove', move)
+      window.addEventListener('pointerup', () => {
+        window.removeEventListener('pointermove', move)
+        if (moved) save(box)
+      }, { once: true })
+    })
+
+
+    document.getElementById('gift_card_layout_reset_layout').addEventListener('click', () => {
+      layoutField.value = ''
+      form.requestSubmit()
+    })
+  })()
+</script>

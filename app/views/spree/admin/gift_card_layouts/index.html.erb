@@ -1,0 +1,27 @@
+<% admin_breadcrumb(link_to(t('spree.listing_gift_cards'), spree.admin_gift_cards_path)) %>
+<% admin_breadcrumb(t('spree.admin.gift_card_layouts.title')) %>
+
+<p><%= t('spree.admin.gift_card_layouts.explanation') %></p>
+
+<% if @variants.any? %>
+  <table class="index">
+    <thead>
+      <tr>
+        <th><%= t('spree.admin.gift_card_layouts.preview') %></th>
+        <th><%= Spree::Variant.model_name.human %></th>
+        <th class="actions"></th>
+      </tr>
+    </thead>
+    <tbody>
+      <% @variants.each do |variant| %>
+        <tr id="<%= spree_dom_id variant %>">
+          <td><%= link_to image_tag(preview_admin_gift_card_layout_path(variant), alt: variant.descriptive_name, width: 240, loading: 'lazy'), edit_admin_gift_card_layout_path(variant) %></td>
+          <td><%= link_to variant.descriptive_name, edit_admin_gift_card_layout_path(variant) %></td>
+          <td class="actions"><%= link_to_edit_url edit_admin_gift_card_layout_path(variant), no_text: true %></td>
+        </tr>
+      <% end %>
+    </tbody>
+  </table>
+<% else %>
+  <div class="no-objects-found"><%= t('spree.admin.gift_card_layouts.none') %></div>
+<% end %>
