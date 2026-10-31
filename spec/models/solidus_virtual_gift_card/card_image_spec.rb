@@ -30,12 +30,11 @@ describe SolidusVirtualGiftCard::CardImage do
 
   context 'with a design' do
     let(:design) do
-      Spree::GiftCardDesign.create!(name: 'Dark', amount_color: '#ffffff', ink_color: '#ffffff', box_color: '#ffffff')
+      Spree::GiftCardDesign.create!(name: 'Dark')
     end
     let(:layout) do
-      { amount: { x: 0.1, y: 0.1, width: 0.8, size: 0.2, color: :amount },
-        code: { x: 0.5, y: 0.4, width: 0.8, size: 0.1, color: :ink, align: :centre },
-        note: { x: 0.1, y: 0.55, width: 0.5, size: 0.04, color: :ink, text: 'solidus_virtual_gift_card.card_image.filename' },
+      { amount: { x: 0.1, y: 0.1, width: 0.8, size: 0.2, color: '#ffffff' },
+        code: { x: 0.1, y: 0.4, width: 0.8, height: 0.12, size: 0.1, color: [255, 255, 255], align: :centre },
         qr: { x: 0.7, y: 0.6, size: 0.3 } }
     end
 
@@ -46,7 +45,7 @@ describe SolidusVirtualGiftCard::CardImage do
       allow(SolidusVirtualGiftCard::Config).to receive(:card_image_layout).and_return(layout)
     end
 
-    it 'draws the design texts in its colours on its background' do
+    it 'draws the fields in their colours on the design background' do
       image = decode(described_class.new(gift_card).to_png)
 
       expect([image.width, image.height]).to eq([600, 400])

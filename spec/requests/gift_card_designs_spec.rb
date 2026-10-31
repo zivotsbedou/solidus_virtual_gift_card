@@ -16,7 +16,7 @@ describe 'Gift card design administration', type: :request do
   end
 
   it 'creates a design with its artwork and previews the finished card' do
-    post '/admin/gift_card_designs', params: { gift_card_design: { name: 'Champagne', background: png, ink_color: '#2d3142' } }
+    post '/admin/gift_card_designs', params: { gift_card_design: { name: 'Champagne', background: png } }
     design = Spree::GiftCardDesign.last
 
     expect(response).to redirect_to("/admin/gift_card_designs/#{design.id}/edit")
@@ -36,12 +36,12 @@ describe 'Gift card design administration', type: :request do
     expect(response.body).to include('Vánoční', "/admin/gift_card_designs/#{design.id}/preview")
   end
 
-  it 'previews unsaved colours and layout without saving them' do
-    design = Spree::GiftCardDesign.create!(name: 'Champagne', ink_color: '#2d3142')
+  it 'previews an unsaved layout without saving it' do
+    design = Spree::GiftCardDesign.create!(name: 'Champagne')
 
-    get "/admin/gift_card_designs/#{design.id}/preview", params: { gift_card_design: { ink_color: '#ae9ac6', box_color: 'red', layout: '{"code":{"y":0.1}}' } }
+    get "/admin/gift_card_designs/#{design.id}/preview", params: { gift_card_design: { layout: '{"code":{"y":0.1,"color":"#ae9ac6"}}' } }
 
     expect(response.media_type).to eq('image/png')
-    expect(design.reload).to have_attributes(ink_color: '#2d3142', layout: nil)
+    expect(design.reload.layout).to be_nil
   end
 end

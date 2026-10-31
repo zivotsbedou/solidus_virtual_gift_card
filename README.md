@@ -94,13 +94,13 @@ a field may set `font` and `fontfile`. Field text comes from the
 ## Card designs
 
 Staff manage designs under **Gift cards → Card designs** in the admin: a background
-image carrying the design's own texts, three colours (amount, text, text in the box), where
-each field sits and whether customers are offered it. The edit page shows the finished card;
+image carrying the design's fixed texts, where each field sits with its font, size and
+colour, and whether customers are offered it. The edit page shows the finished card;
 staff drag each field's frame on it to place the field for that design. Storefronts
 pass `gift_card_details[design_id]`; inactive designs are refused for new cards.
 
-Layout fields may use a design colour role (`color: :amount`, `:ink` or `:box`), and a
-design may move or resize any field (its `layout`). A `:qr` field (`x`, `y`, `size`) draws a QR code for
+A design may move or resize any field and set its `font` (one of `card_image_fonts`),
+`size` and `color` (its `layout`). A `:qr` field (`x`, `y`, `size`) draws a QR code in its `color` on its `background` for
 `Config.card_qr_url`, a callable given the gift card:
 
 ```ruby

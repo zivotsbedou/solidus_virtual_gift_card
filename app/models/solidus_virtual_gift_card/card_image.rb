@@ -3,12 +3,9 @@
 module SolidusVirtualGiftCard
   # Draws a gift card's details onto its design (or product image, or a plain card) as a PNG.
   #
-  # Each card_image_layout field is a text field, or :qr for the redemption QR code. A field's
-  # color may be a design role (:amount, :ink or :box). A field with text: draws
-  # that translation as is.
+  # Each card_image_layout field is a text field, or :qr for the redemption QR code, drawn in its
+  # color on its background. A colour is [r, g, b] or "#rrggbb".
   class CardImage
-    DEFAULT_INK = [33, 33, 33].freeze
-
     def initialize(gift_card, config: SolidusVirtualGiftCard::Config)
       @gift_card = gift_card
       @design = gift_card.design
@@ -43,7 +40,7 @@ module SolidusVirtualGiftCard
     end
 
     def draw_field(image, field, style)
-      markup = style[:text] ? ERB::Util.html_escape(I18n.t(style[:text])) : markup_for(field.to_sym)
+      markup = markup_for(field.to_sym)
       markup.blank? ? image : draw(image, markup, style)
     end
 
@@ -58,29 +55,31 @@ module SolidusVirtualGiftCard
     end
 
     def draw(image, markup, style)
+      # A field is a box: text wraps at its width, centres within it, and is cut at its height.
       align = style.fetch(:align, :low)
+      width = (style.fetch(:width) * image.width).round
       mask = Vips::Image.text(
         markup,
         font: "#{style.fetch(:font, 'sans')} #{(style.fetch(:size) * image.height).round}",
         fontfile: style[:fontfile],
-        width: (style.fetch(:width) * image.width).round,
+        width: width,
         align: align,
         dpi: 72,
         wrap: :word
       )
+      height = style[:height] && (style[:height] * image.height).round
+      mask = mask.crop(0, 0, mask.width, height) if height && mask.height > height
       x = (style.fetch(:x) * image.width).round
-      x -= mask.width / 2 if align == :centre
-      ink = mask.new_from_image(color(style.fetch(:color, :ink))).copy(interpretation: :srgb).bandjoin(mask)
+      x += (width - mask.width) / 2 if align == :centre
+      ink = mask.new_from_image(color(style.fetch(:color, [33, 33, 33]))).copy(interpretation: :srgb).bandjoin(mask)
       opaque(image.bandjoin(255).composite2(ink, :over, x: x, y: (style.fetch(:y) * image.height).round))
     end
 
     def color(value)
-      return value unless value.is_a?(Symbol)
-
-      @design ? @design.rgb(value) : DEFAULT_INK
+      value.is_a?(String) ? value.delete('#').scan(/../).map(&:hex) : value
     end
 
-    # A dark-on-white code with a quiet zone, so phones read it on any background.
+    # A code with a quiet zone in its background colour, so phones read it on any artwork.
     def draw_qr(image, style)
       url = @config.card_qr_url&.call(@gift_card)
       return image if url.blank? || @gift_card.redemption_code.blank?
@@ -97,7 +96,8 @@ module SolidusVirtualGiftCard
       end
       size = (style.fetch(:size) * image.height).round
       code = Vips::Image.new_from_array(rows).cast(:uchar).resize(size.to_f / cells, kernel: :nearest)
-      code = (code > 127).ifthenelse([255, 255, 255], style.fetch(:dark, [45, 49, 66])).cast(:uchar).copy(interpretation: :srgb)
+      code = (code > 127).ifthenelse(color(style.fetch(:background, [255, 255, 255])), color(style.fetch(:color, [45, 49, 66])))
+      code = code.cast(:uchar).copy(interpretation: :srgb)
       opaque(image.bandjoin(255).composite2(code.bandjoin(255), :over, x: (style.fetch(:x) * image.width).round,
                                                                         y: (style.fetch(:y) * image.height).round))
     end

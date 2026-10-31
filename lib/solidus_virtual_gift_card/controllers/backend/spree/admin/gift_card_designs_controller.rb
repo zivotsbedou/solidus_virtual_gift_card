@@ -4,7 +4,7 @@ module Spree
   module Admin
     class GiftCardDesignsController < ResourceController
       # The design drawn with sample details, so staff see the finished card before customers do.
-      # Unsaved colours and layout from the edit form are drawn without saving them.
+      # The unsaved layout from the edit form are drawn without saving them.
       def preview
         @object.assign_attributes(preview_params)
         sample = Spree::VirtualGiftCard.new(
@@ -20,8 +20,7 @@ module Spree
       private
 
       def preview_params
-        params.fetch(:gift_card_design, {}).permit(:amount_color, :ink_color, :box_color, :layout)
-              .to_h.reject { |key, value| key.end_with?('_color') && !value.match?(Spree::GiftCardDesign::COLOR) }
+        params.fetch(:gift_card_design, {}).permit(:layout)
       end
 
       def collection
@@ -29,8 +28,7 @@ module Spree
       end
 
       def permitted_resource_params
-        params.require(:gift_card_design).permit(:name, :amount_color, :ink_color,
-                                                 :box_color, :active, :position, :background, :layout)
+        params.require(:gift_card_design).permit(:name, :active, :position, :background, :layout)
       end
 
       def location_after_save

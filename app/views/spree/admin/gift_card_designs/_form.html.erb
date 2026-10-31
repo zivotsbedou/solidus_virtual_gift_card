@@ -13,13 +13,6 @@
     <% end %>
   </div>
   <div class="col-6">
-    <% Spree::GiftCardDesign::ROLES.each do |role| %>
-      <%= f.field_container :"#{role}_color" do %>
-        <%= f.label :"#{role}_color" %>
-        <%= f.color_field :"#{role}_color" %>
-        <%= f.error_message_on :"#{role}_color" %>
-      <% end %>
-    <% end %>
     <%= f.field_container :position do %>
       <%= f.label :position %>
       <%= f.number_field :position, min: 0 %>

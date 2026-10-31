@@ -3,16 +3,6 @@
 require 'spec_helper'
 
 describe Spree::GiftCardDesign do
-  it 'gives each colour role as RGB' do
-    design = described_class.new(name: 'Lilac', amount_color: '#ae9ac6')
-
-    expect(design.rgb(:amount)).to eq([174, 154, 198])
-  end
-
-  it 'rejects colours that are not #rrggbb' do
-    expect(described_class.new(name: 'Bad', ink_color: 'red')).not_to be_valid
-  end
-
   it 'accepts only PNG or JPEG backgrounds' do
     design = described_class.new(name: 'Text')
     design.background.attach(io: StringIO.new('text'), filename: 'card.txt', content_type: 'text/plain')
@@ -52,10 +42,10 @@ describe Spree::GiftCardDesign do
     let(:base) { { code: { x: 0.3, y: 0.5, width: 0.5, size: 0.05, align: :centre } } }
 
     it 'places fields where staff put them' do
-      design = described_class.new(name: 'Moved', layout: '{"code":{"x":0.6,"y":0.2,"size":0.08}}')
+      design = described_class.new(name: 'Moved', layout: '{"code":{"x":0.6,"y":0.2,"size":0.08,"font":"sans bold","color":"#ae9ac6"}}')
 
       expect(design).to be_valid
-      expect(design.card_layout(base)[:code]).to eq(x: 0.6, y: 0.2, width: 0.5, size: 0.08, align: :centre)
+      expect(design.card_layout(base)[:code]).to eq(x: 0.6, y: 0.2, width: 0.5, size: 0.08, align: :centre, font: 'sans bold', color: '#ae9ac6')
     end
 
     it 'goes back to the configured layout when cleared' do
@@ -67,5 +57,7 @@ describe Spree::GiftCardDesign do
     expect(described_class.new(name: 'Bad', layout: '{"code":{"x":2}}')).not_to be_valid
     expect(described_class.new(name: 'Bad', layout: '{"code":{"colour":"red"}}')).not_to be_valid
     expect(described_class.new(name: 'Bad', layout: 'not json')).not_to be_valid
+    expect(described_class.new(name: 'Bad', layout: '{"code":{"color":"red"}}')).not_to be_valid
+    expect(described_class.new(name: 'Bad', layout: '{"code":{"font":"Comic Sans"}}')).not_to be_valid
   end
 end

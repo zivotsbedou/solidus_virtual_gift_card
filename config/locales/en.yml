@@ -9,12 +9,14 @@ en:
         explanation: Customers choose an active design when they buy a gift card. The card's amount, code, QR code, recipient and message are drawn on its background.
         preview: Preview
         reset_layout: Use the default layout
+        font: Font
+        font_size: Size (pt)
+        font_color: Colour
+        qr_background: Background
         fields:
           amount: Amount
           qr: QR code
-          code_label: Code label
           code: Code
-          note: Note
           recipient_name: Recipient
           purchaser_name: Sender
           gift_message: Message
@@ -155,9 +157,6 @@ en:
       spree/gift_card_design:
         name: Name
         background: Background
-        amount_color: Amount colour
-        ink_color: Text colour
-        box_color: Text colour in the box
         active: Offered to customers
         layout: Layout
         position: Order
