@@ -8,8 +8,6 @@ en:
         none: No card designs yet. Customers get a plain card.
         explanation: Customers choose an active design when they buy a gift card. The card's amount, code, QR code, recipient and message are drawn on its background.
         preview: Preview
-        preview_hint: The preview follows the texts, colours and alignment as you change them. Save to see a new background.
-        layout_hint: Drag a frame to move its field. Drag its corner sideways for the text width, up or down for the text or QR code size. Save to keep the layout.
         reset_layout: Use the default layout
         fields:
           amount: Amount

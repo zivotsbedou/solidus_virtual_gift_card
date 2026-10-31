@@ -11,7 +11,6 @@
 <% end %>
 <fieldset>
   <legend><%= t('spree.admin.gift_card_designs.preview') %></legend>
-  <p class="info"><%= t('spree.admin.gift_card_designs.preview_hint') %> <%= t('spree.admin.gift_card_designs.layout_hint') %></p>
   <div id="gift_card_design_canvas" style="position: relative; display: inline-block; max-width: 100%; user-select: none;">
     <%= image_tag preview_admin_gift_card_design_path(@object, v: @object.updated_at.to_i), id: 'gift_card_design_preview', alt: t('spree.admin.gift_card_designs.preview'), draggable: false, style: 'display: block; max-width: 100%; height: auto;' %>
     <% default_layout = SolidusVirtualGiftCard::Config.card_image_layout %>
