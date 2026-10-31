@@ -1,0 +1,38 @@
+<% admin_breadcrumb(link_to(t('spree.listing_gift_cards'), spree.admin_gift_cards_path)) %>
+<% admin_breadcrumb(t('spree.admin.gift_card_templates.title')) %>
+
+<% content_for :page_actions do %>
+  <ul class="actions inline-menu">
+    <li><%= link_to t('spree.admin.gift_card_templates.new'), new_object_url, class: 'btn btn-primary' %></li>
+  </ul>
+<% end %>
+
+<p><%= t('spree.admin.gift_card_templates.explanation') %></p>
+
+<% if @collection.any? %>
+  <table class="index">
+    <thead>
+      <tr>
+        <th><%= t('spree.admin.gift_card_templates.preview') %></th>
+        <th><%= Spree::GiftCardTemplate.human_attribute_name(:name) %></th>
+        <th><%= Spree::Variant.model_name.human(count: 2) %></th>
+        <th class="actions"></th>
+      </tr>
+    </thead>
+    <tbody>
+      <% @collection.includes(variants: :product).each do |template| %>
+        <tr id="<%= spree_dom_id template %>">
+          <td><%= link_to image_tag(preview_admin_gift_card_template_path(template, v: template.updated_at.to_i), alt: template.name, width: 240, loading: 'lazy'), edit_object_url(template) %></td>
+          <td><%= link_to template.name, edit_object_url(template) %></td>
+          <td><%= safe_join(template.variants.map { |variant| link_to variant.descriptive_name, spree.edit_admin_product_variant_path(variant.product, variant) }, tag.br) %></td>
+          <td class="actions">
+            <%= link_to_edit template, no_text: true %>
+            <%= link_to_delete template, no_text: true if template.variants.none? %>
+          </td>
+        </tr>
+      <% end %>
+    </tbody>
+  </table>
+<% else %>
+  <div class="no-objects-found"><%= t('spree.admin.gift_card_templates.none') %></div>
+<% end %>

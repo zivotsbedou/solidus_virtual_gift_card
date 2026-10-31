@@ -1,8 +1,12 @@
-class MoveGiftCardDesignsToVariants < ActiveRecord::Migration[7.0]
-  # Card designs are variants of the gift card product: the artwork is the variant image and the
-  # card layout is stored on the variant.
+class CreateGiftCardTemplates < ActiveRecord::Migration[7.0]
+  # Card designs become templates (artwork and field layout) that gift card variants pick.
   def change
-    add_column :spree_variants, :gift_card_layout, :json
+    create_table :spree_gift_card_templates do |t|
+      t.string :name, null: false
+      t.json :layout
+      t.timestamps
+    end
+    add_reference :spree_variants, :gift_card_template, foreign_key: { to_table: :spree_gift_card_templates }
     remove_reference :spree_virtual_gift_cards, :design, foreign_key: { to_table: :spree_gift_card_designs }, index: true
     drop_table :spree_gift_card_designs do |t|
       t.string :name, null: false

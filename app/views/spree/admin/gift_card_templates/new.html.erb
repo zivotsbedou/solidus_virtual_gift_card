@@ -1,0 +1,10 @@
+<% admin_breadcrumb(link_to(t('spree.admin.gift_card_templates.title'), spree.admin_gift_card_templates_path)) %>
+<% admin_breadcrumb(t('spree.admin.gift_card_templates.new')) %>
+
+<%= render 'spree/shared/error_messages', target: @object %>
+<%= form_for [:admin, @object], html: { multipart: true } do |f| %>
+  <fieldset>
+    <%= render 'form', f: f %>
+    <%= render 'spree/admin/shared/new_resource_links' %>
+  </fieldset>
+<% end %>

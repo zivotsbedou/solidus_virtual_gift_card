@@ -2,9 +2,9 @@
 
 ## Unreleased
 
-- Gift card variants are card designs: cards are drawn on the variant image, and
-  staff place each field (box, font, size, colour) on a live preview. Card images
-  can carry a QR code.
+- Card templates: artwork plus each field's box, font, size and colour, placed on
+  a live preview. Gift card variants pick a template. Card images can carry a QR
+  code.
 - Configurable redemption code length; codes avoid look-alike characters and
   ignore case, spaces and dashes when typed.
 - Customer-chosen amounts for gift card products, within a configured range.

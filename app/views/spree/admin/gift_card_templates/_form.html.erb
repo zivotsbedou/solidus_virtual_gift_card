@@ -1,0 +1,17 @@
+<div class="row">
+  <div class="col-6">
+    <%= f.field_container :name do %>
+      <%= f.label :name, class: 'required' %>
+      <%= f.text_field :name, class: 'fullwidth' %>
+      <%= f.error_message_on :name %>
+    <% end %>
+  </div>
+  <div class="col-6">
+    <%= f.field_container :background do %>
+      <%= f.label :background %>
+      <%= f.file_field :background, accept: 'image/png,image/jpeg' %>
+      <p class="info"><%= t('spree.admin.gift_card_templates.background_hint') %></p>
+      <%= f.error_message_on :background %>
+    <% end %>
+  </div>
+</div>

@@ -4,7 +4,7 @@ Spree::Core::Engine.routes.draw do
   if defined?(Spree::Backend)
     namespace :admin do
       resources :gift_cards, only: [:index, :edit, :update]
-      resources :gift_card_layouts, only: [:index, :edit, :update] do
+      resources :gift_card_templates, except: :show do
         get :preview, on: :member
       end
 

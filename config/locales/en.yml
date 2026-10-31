@@ -2,11 +2,13 @@
 en:
   spree:
     admin:
-      gift_card_layouts:
-        title: Card designs
-        none: No gift card products yet.
-        explanation: Each variant of a gift card product is a card design, drawn on the variant's image. Place the card's fields on it here.
-        edit_variant: Edit variant
+      gift_card_templates:
+        title: Card templates
+        new: New card template
+        none: No card templates yet.
+        explanation: A template is the card artwork and where the amount, code, QR code, recipient and message are drawn on it. Each gift card variant picks its template.
+        background_hint: "PNG or JPEG artwork with the card's fixed texts, 1748 × 1240 px (A6 landscape at 300 dpi)."
+
         preview: Preview
         reset_layout: Use the default layout
         font: Font
@@ -146,6 +148,15 @@ en:
       purchaser_name: "From %{value}"
       gift_message: "%{value}"
   activerecord:
+    models:
+      spree/gift_card_template:
+        one: Card template
+        other: Card templates
     attributes:
+      spree/gift_card_template:
+        name: Name
+        background: Artwork
+        layout: Layout
       spree/variant:
-        gift_card_layout: Card layout
+        gift_card_template: Card template
+        gift_card_template_id: Card template
