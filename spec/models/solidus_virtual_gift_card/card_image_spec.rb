@@ -62,6 +62,12 @@ describe SolidusVirtualGiftCard::CardImage do
     end
   end
 
+  it 'leaves out the code and QR code of a card without a code' do
+    allow(SolidusVirtualGiftCard::Config).to receive(:card_qr_url).and_return(->(card) { "https://shop.test/poukaz/#{card.redemption_code.presence || raise}" })
+
+    expect { described_class.new(Spree::VirtualGiftCard.new(amount: 500, currency: 'USD')).to_png }.not_to raise_error
+  end
+
   it 'leaves out empty fields' do
     gift_card.update!(recipient_name: nil, purchaser_name: nil, gift_message: nil)
 

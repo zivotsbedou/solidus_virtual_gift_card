@@ -82,8 +82,10 @@ module SolidusVirtualGiftCard
 
     # A code with a quiet zone in its background colour, so phones read it on any artwork.
     def draw_qr(image, style)
+      return image if @gift_card.redemption_code.blank?
+
       url = @config.card_qr_url&.call(@gift_card)
-      return image if url.blank? || @gift_card.redemption_code.blank?
+      return image if url.blank?
 
       require 'rqrcode'
       modules = RQRCode::QRCode.new(url, level: :m).modules
