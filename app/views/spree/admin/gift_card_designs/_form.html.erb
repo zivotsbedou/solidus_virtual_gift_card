@@ -1,0 +1,46 @@
+<div class="row">
+  <div class="col-6">
+    <%= f.field_container :name do %>
+      <%= f.label :name, class: 'required' %>
+      <%= f.text_field :name, class: 'fullwidth' %>
+      <%= f.error_message_on :name %>
+    <% end %>
+    <%= f.field_container :background do %>
+      <%= f.label :background %>
+      <%= f.file_field :background, accept: 'image/png,image/jpeg' %>
+      <p class="info"><%= t('spree.admin.gift_card_designs.background_hint') %></p>
+      <%= f.error_message_on :background %>
+    <% end %>
+    <%= f.field_container :heading do %>
+      <%= f.label :heading %>
+      <%= f.text_field :heading, class: 'fullwidth' %>
+    <% end %>
+    <%= f.field_container :footer do %>
+      <%= f.label :footer %>
+      <%= f.text_area :footer, rows: 2, class: 'fullwidth' %>
+      <p class="info"><%= t('spree.admin.gift_card_designs.footer_hint') %></p>
+    <% end %>
+    <%= f.field_container :footer_align do %>
+      <%= f.label :footer_align %>
+      <%= f.select :footer_align, Spree::GiftCardDesign::ALIGNMENTS.map { |align| [t(align, scope: 'spree.admin.gift_card_designs.alignments'), align] }, {}, class: 'custom-select' %>
+    <% end %>
+  </div>
+  <div class="col-6">
+    <% Spree::GiftCardDesign::ROLES.each do |role| %>
+      <%= f.field_container :"#{role}_color" do %>
+        <%= f.label :"#{role}_color" %>
+        <%= f.color_field :"#{role}_color" %>
+        <%= f.error_message_on :"#{role}_color" %>
+      <% end %>
+    <% end %>
+    <%= f.field_container :position do %>
+      <%= f.label :position %>
+      <%= f.number_field :position, min: 0 %>
+      <p class="info"><%= t('spree.admin.gift_card_designs.position_hint') %></p>
+    <% end %>
+    <%= f.field_container :active do %>
+      <label><%= f.check_box :active %> <%= Spree::GiftCardDesign.human_attribute_name(:active) %></label>
+      <p class="info"><%= t('spree.admin.gift_card_designs.active_hint') %></p>
+    <% end %>
+  </div>
+</div>

@@ -32,6 +32,8 @@ Gem::Specification.new do |spec|
   spec.add_dependency 'deface'
   # CardImage loads it only when card images are enabled; it also needs libvips installed.
   spec.add_dependency 'ruby-vips', '~> 2.2'
+  # CardImage draws the redemption QR code when card_qr_url is set.
+  spec.add_dependency 'rqrcode', '>= 2.0'
   spec.add_dependency 'solidus_core', ['>= 4.8', '< 5']
   spec.add_dependency 'solidus_support', '>= 0.14.1', '< 1'
 
